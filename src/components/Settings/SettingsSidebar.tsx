@@ -5,7 +5,8 @@ import {
   Clock, 
   Database, 
   Info,
-  Sparkles
+  Sparkles,
+  LayoutGrid
 } from 'lucide-react';
 import { useAppStore } from '../../stores/useAppStore';
 import type { SettingsTab } from '../../types';
@@ -19,6 +20,7 @@ interface MenuItem {
 const menuItems: MenuItem[] = [
   { id: 'appearance', label: '外观设置', icon: <Palette size={18} /> },
   { id: 'wallpaper', label: '壁纸设置', icon: <Image size={18} /> },
+  { id: 'widgets', label: '小组件', icon: <LayoutGrid size={18} /> },
   { id: 'features', label: '功能开关', icon: <Settings2 size={18} /> },
   { id: 'time', label: '时间设置', icon: <Clock size={18} /> },
   { id: 'data', label: '数据管理', icon: <Database size={18} /> },
@@ -35,7 +37,7 @@ export function SettingsSidebar() {
       <div className="p-4 border-b border-slate-700/50">
         <div className="flex items-center gap-2 text-white">
           <Sparkles size={24} className="text-indigo-400" />
-          <span className="font-semibold">New Tab</span>
+          <span className="font-semibold">Constantine's Tab</span>
         </div>
       </div>
       

@@ -5,4 +5,13 @@ export { SettingsButton } from './SettingsButton';
 export { Background } from './Background';
 export { CustomCss } from './CustomCss';
 export { SettingsModal } from './Settings/SettingsModal';
-export { Pomodoro, TodoList, Weather, DailyQuote } from './Widgets';
+export { 
+  Pomodoro, 
+  TodoList, 
+  Weather, 
+  DailyQuote,
+  WidgetContainer,
+  CountdownWidget,
+  NoteWidget,
+  CalendarWidget,
+} from './Widgets';

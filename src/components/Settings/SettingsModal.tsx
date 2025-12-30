@@ -4,6 +4,7 @@ import { useAppStore } from '../../stores/useAppStore';
 import { SettingsSidebar } from './SettingsSidebar';
 import { AppearanceSettings } from './AppearanceSettings';
 import { WallpaperSettings } from './WallpaperSettings';
+import { WidgetsSettings } from './WidgetsSettings';
 import { FeaturesSettings } from './FeaturesSettings';
 import { TimeSettings } from './TimeSettings';
 import { DataSettings } from './DataSettings';
@@ -20,6 +21,8 @@ export function SettingsModal() {
         return <AppearanceSettings />;
       case 'wallpaper':
         return <WallpaperSettings />;
+      case 'widgets':
+        return <WidgetsSettings />;
       case 'features':
         return <FeaturesSettings />;
       case 'time':

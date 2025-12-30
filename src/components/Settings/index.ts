@@ -2,6 +2,7 @@ export { SettingsModal } from './SettingsModal';
 export { SettingsSidebar } from './SettingsSidebar';
 export { AppearanceSettings } from './AppearanceSettings';
 export { WallpaperSettings } from './WallpaperSettings';
+export { WidgetsSettings } from './WidgetsSettings';
 export { FeaturesSettings } from './FeaturesSettings';
 export { TimeSettings } from './TimeSettings';
 export { DataSettings } from './DataSettings';

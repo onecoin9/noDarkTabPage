@@ -44,6 +44,9 @@ const defaultSettings: AppSettings = {
   showQuote: true,
   showTodo: true,
   showPomodoro: true,
+  showCountdown: false,
+  showNote: false,
+  showCalendar: false,
   weatherCity: '北京',
   weatherUnit: 'celsius',
 };

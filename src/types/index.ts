@@ -89,6 +89,9 @@ export interface AppSettings {
   showQuote: boolean;
   showTodo: boolean;
   showPomodoro: boolean;
+  showCountdown: boolean;
+  showNote: boolean;
+  showCalendar: boolean;
   
   // 天气
   weatherCity: string;
@@ -100,6 +103,7 @@ export type SettingsTab =
   | 'appearance'
   | 'theme'
   | 'wallpaper'
+  | 'widgets'
   | 'features'
   | 'interaction'
   | 'time'

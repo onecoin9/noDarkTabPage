@@ -5,7 +5,7 @@ export function AboutSettings() {
     <div className="space-y-8">
       <section className="text-center py-8">
         <div className="text-6xl mb-4">🍅</div>
-        <h2 className="text-2xl font-bold text-white mb-2">New Tab Page</h2>
+        <h2 className="text-2xl font-bold text-white mb-2">Constantine's Tab</h2>
         <p className="text-slate-400">一个现代化的浏览器新标签页</p>
         <p className="text-slate-500 text-sm mt-2">版本 2.0.0</p>
       </section>
