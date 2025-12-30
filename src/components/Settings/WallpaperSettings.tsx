@@ -23,40 +23,8 @@ const unsplashCategories = [
   { name: '太空', value: 'space' },
 ];
 
-// 预设的高质量壁纸（来自 Wallhaven）
-const wallhavenPresets = {
-  toplist: [
-    'https://w.wallhaven.cc/full/ex/wallhaven-ex9gwo.png',
-    'https://w.wallhaven.cc/full/p9/wallhaven-p9396j.jpg',
-    'https://w.wallhaven.cc/full/zy/wallhaven-zymgky.jpg',
-    'https://w.wallhaven.cc/full/gp/wallhaven-gpkd77.jpg',
-    'https://w.wallhaven.cc/full/72/wallhaven-72rxqo.jpg',
-  ],
-  anime: [
-    'https://w.wallhaven.cc/full/d6/wallhaven-d6mwol.jpg',
-    'https://w.wallhaven.cc/full/zy/wallhaven-zymrxy.jpg',
-    'https://w.wallhaven.cc/full/gp/wallhaven-gpj6w3.jpg',
-    'https://w.wallhaven.cc/full/ex/wallhaven-exj1kk.jpg',
-  ],
-  landscape: [
-    'https://w.wallhaven.cc/full/pk/wallhaven-pkgqqp.jpg',
-    'https://w.wallhaven.cc/full/zy/wallhaven-zyxvqy.jpg',
-    'https://w.wallhaven.cc/full/72/wallhaven-72ze8o.jpg',
-    'https://w.wallhaven.cc/full/d6/wallhaven-d6mg91.jpg',
-  ],
-  minimalist: [
-    'https://w.wallhaven.cc/full/x8/wallhaven-x8gkvz.png',
-    'https://w.wallhaven.cc/full/zy/wallhaven-zym3gy.png',
-    'https://w.wallhaven.cc/full/gp/wallhaven-gpw237.png',
-    'https://w.wallhaven.cc/full/pk/wallhaven-pkrqem.jpg',
-  ],
-  cyberpunk: [
-    'https://w.wallhaven.cc/full/pk/wallhaven-pklekm.png',
-    'https://w.wallhaven.cc/full/zy/wallhaven-zy8d7y.jpg',
-    'https://w.wallhaven.cc/full/gp/wallhaven-gpe6w7.jpg',
-    'https://w.wallhaven.cc/full/d6/wallhaven-d65o6l.jpg',
-  ],
-};
+// Supabase Edge Function URL for Wallhaven proxy
+const WALLHAVEN_PROXY_URL = 'https://gbfdfpxlltnvnrsayrou.supabase.co/functions/v1/wallhaven';
 
 const wallhavenCategories = [
   { name: '热门', value: 'toplist' },
@@ -70,6 +38,7 @@ export function WallpaperSettings() {
   const settings = useAppStore((s) => s.settings);
   const updateSettings = useAppStore((s) => s.updateSettings);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [wallhavenCategory, setWallhavenCategory] = useState('toplist');
 
   const setBackgroundType = (type: BackgroundType) => {
@@ -83,8 +52,10 @@ export function WallpaperSettings() {
     } else if (type === 'unsplash') {
       newBackground.value = 'https://source.unsplash.com/random/1920x1080';
     } else if (type === 'wallhaven') {
-      const presets = wallhavenPresets.toplist;
-      newBackground.value = presets[Math.floor(Math.random() * presets.length)];
+      // 切换到 wallhaven 时自动获取一张
+      updateSettings({ background: newBackground });
+      fetchWallhavenImage('toplist');
+      return;
     }
     
     updateSettings({ background: newBackground });
@@ -114,26 +85,33 @@ export function WallpaperSettings() {
     });
   };
 
-  const fetchWallhavenImage = (category: string) => {
+  const fetchWallhavenImage = async (category: string) => {
     setLoading(true);
+    setError(null);
     
-    // 使用预设壁纸
-    const presets = wallhavenPresets[category as keyof typeof wallhavenPresets] || wallhavenPresets.toplist;
-    const randomIndex = Math.floor(Math.random() * presets.length);
-    const imageUrl = presets[randomIndex];
-    
-    // 模拟加载延迟
-    setTimeout(() => {
-      updateSettings({
-        background: { 
-          ...settings.background, 
-          type: 'wallhaven', 
-          value: imageUrl,
-          wallhavenCategory: category,
-        },
-      });
+    try {
+      const response = await fetch(`${WALLHAVEN_PROXY_URL}?category=${category}`);
+      const data = await response.json();
+      
+      if (data.error) {
+        throw new Error(data.error);
+      }
+      
+      if (data.url) {
+        updateSettings({
+          background: { 
+            ...settings.background, 
+            type: 'wallhaven', 
+            value: data.url,
+            wallhavenCategory: category,
+          },
+        });
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '获取壁纸失败');
+    } finally {
       setLoading(false);
-    }, 300);
+    }
   };
 
   const handleWallhavenCategory = (category: string) => {
@@ -205,6 +183,12 @@ export function WallpaperSettings() {
         <section>
           <h3 className="text-lg font-medium text-white mb-4">Wallhaven 壁纸</h3>
           <p className="text-slate-400 text-sm mb-4">精选高质量壁纸</p>
+
+          {error && (
+            <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-xl text-red-300 text-sm">
+              {error}
+            </div>
+          )}
           
           <div className="grid grid-cols-3 md:grid-cols-5 gap-3 mb-4">
             {wallhavenCategories.map((cat) => (
