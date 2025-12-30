@@ -1,0 +1,30 @@
+{
+    "manifest_version": 2,
+    "name": "自定义新标签页",
+    "version": "2.0.0",
+    "description": "一个现代化的自定义新标签页，支持书签管理、Custom CSS 和数据同步",
+    "author": "Constantine",
+    "chrome_url_overrides": {
+        "newtab": "index.html"
+    },
+    "permissions": [
+        "storage"
+    ],
+    "icons": {
+        "48": "icons/icon48.png",
+        "96": "icons/icon96.png"
+    },
+    "browser_action": {
+        "default_icon": {
+            "48": "icons/icon48.png",
+            "96": "icons/icon96.png"
+        },
+        "default_title": "自定义新标签页"
+    },
+    "browser_specific_settings": {
+        "gecko": {
+            "id": "custom-newtab@constantine.projects",
+            "strict_min_version": "57.0"
+        }
+    }
+}
