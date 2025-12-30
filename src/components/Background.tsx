@@ -4,27 +4,33 @@ export function Background() {
   const background = useAppStore((s) => s.settings.background);
 
   const getBackgroundStyle = (): React.CSSProperties => {
+    const baseStyle: React.CSSProperties = {
+      filter: `blur(${background.blur || 0}px) brightness(${(background.brightness || 100) / 100})`,
+    };
+
     switch (background.type) {
       case 'gradient':
-        return { background: background.value };
+        return { ...baseStyle, background: background.value };
       case 'custom':
+      case 'unsplash':
         return {
+          ...baseStyle,
           backgroundImage: `url(${background.value})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
         };
-      case 'solid':
-        return { backgroundColor: background.value };
-      case 'unsplash':
-        const category = background.unsplashCategory || '';
-        const url = `https://source.unsplash.com/random/1920x1080${category ? `?${category}` : ''}`;
+      case 'bing':
+        // Bing 每日壁纸 API
         return {
-          backgroundImage: `url(${url})`,
+          ...baseStyle,
+          backgroundImage: `url(https://bing.biturl.top/?resolution=1920&format=image)`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
         };
+      case 'solid':
+        return { ...baseStyle, backgroundColor: background.value };
       default:
-        return { background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' };
+        return { ...baseStyle, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' };
     }
   };
 

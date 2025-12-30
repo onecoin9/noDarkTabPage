@@ -1,6 +1,15 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { Bookmark, AppSettings, SearchEngine, BackgroundConfig } from '../types';
+import type { 
+  Bookmark, 
+  AppSettings, 
+  SearchEngine, 
+  BackgroundConfig,
+  Todo,
+  PomodoroState,
+  BookmarkDisplayMode,
+  SettingsTab
+} from '../types';
 
 // 默认书签
 const defaultBookmarks: Bookmark[] = [
@@ -17,12 +26,37 @@ const defaultBookmarks: Bookmark[] = [
 // 默认设置
 const defaultSettings: AppSettings = {
   searchEngine: 'google',
+  showSearchSuggestions: true,
   background: {
     type: 'gradient',
     value: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    blur: 0,
+    brightness: 100,
   },
   customCss: '',
+  theme: 'dark',
+  timeFormat: '24h',
   showSeconds: false,
+  showDate: true,
+  bookmarkDisplayMode: 'grid',
+  showBookmarkTitle: true,
+  showWeather: true,
+  showQuote: true,
+  showTodo: true,
+  showPomodoro: true,
+  weatherCity: '北京',
+  weatherUnit: 'celsius',
+};
+
+// 默认番茄钟
+const defaultPomodoro: PomodoroState = {
+  isRunning: false,
+  mode: 'work',
+  timeLeft: 25 * 60,
+  workDuration: 25,
+  breakDuration: 5,
+  longBreakDuration: 15,
+  sessionsCompleted: 0,
 };
 
 interface AppState {
@@ -39,10 +73,28 @@ interface AppState {
   setBackground: (bg: BackgroundConfig) => void;
   setCustomCss: (css: string) => void;
   setShowSeconds: (show: boolean) => void;
+  setBookmarkDisplayMode: (mode: BookmarkDisplayMode) => void;
+  updateSettings: (settings: Partial<AppSettings>) => void;
   
   // 设置面板
   settingsOpen: boolean;
+  settingsTab: SettingsTab;
   toggleSettings: () => void;
+  setSettingsTab: (tab: SettingsTab) => void;
+  
+  // 待办事项
+  todos: Todo[];
+  addTodo: (text: string) => void;
+  toggleTodo: (id: string) => void;
+  removeTodo: (id: string) => void;
+  
+  // 番茄钟
+  pomodoro: PomodoroState;
+  startPomodoro: () => void;
+  pausePomodoro: () => void;
+  resetPomodoro: () => void;
+  tickPomodoro: () => void;
+  setPomodoroSettings: (settings: Partial<PomodoroState>) => void;
   
   // 导入导出
   exportConfig: () => string;
@@ -90,18 +142,108 @@ export const useAppStore = create<AppState>()(
       setShowSeconds: (show) => set((state) => ({
         settings: { ...state.settings, showSeconds: show },
       })),
+
+      setBookmarkDisplayMode: (mode) => set((state) => ({
+        settings: { ...state.settings, bookmarkDisplayMode: mode },
+      })),
+
+      updateSettings: (newSettings) => set((state) => ({
+        settings: { ...state.settings, ...newSettings },
+      })),
       
       // 设置面板
       settingsOpen: false,
+      settingsTab: 'appearance',
       toggleSettings: () => set((state) => ({ settingsOpen: !state.settingsOpen })),
+      setSettingsTab: (tab) => set({ settingsTab: tab }),
+      
+      // 待办事项
+      todos: [],
+      
+      addTodo: (text) => set((state) => ({
+        todos: [...state.todos, {
+          id: Date.now().toString(),
+          text,
+          completed: false,
+          createdAt: new Date().toISOString(),
+        }],
+      })),
+      
+      toggleTodo: (id) => set((state) => ({
+        todos: state.todos.map((t) =>
+          t.id === id ? { ...t, completed: !t.completed } : t
+        ),
+      })),
+      
+      removeTodo: (id) => set((state) => ({
+        todos: state.todos.filter((t) => t.id !== id),
+      })),
+      
+      // 番茄钟
+      pomodoro: defaultPomodoro,
+      
+      startPomodoro: () => set((state) => ({
+        pomodoro: { ...state.pomodoro, isRunning: true },
+      })),
+      
+      pausePomodoro: () => set((state) => ({
+        pomodoro: { ...state.pomodoro, isRunning: false },
+      })),
+      
+      resetPomodoro: () => set((state) => ({
+        pomodoro: {
+          ...state.pomodoro,
+          isRunning: false,
+          timeLeft: state.pomodoro.workDuration * 60,
+          mode: 'work',
+        },
+      })),
+      
+      tickPomodoro: () => set((state) => {
+        const { pomodoro } = state;
+        if (!pomodoro.isRunning) return state;
+        
+        if (pomodoro.timeLeft <= 1) {
+          // 时间到，切换模式
+          const isWork = pomodoro.mode === 'work';
+          const sessions = isWork ? pomodoro.sessionsCompleted + 1 : pomodoro.sessionsCompleted;
+          const nextMode = isWork 
+            ? (sessions % 4 === 0 ? 'longBreak' : 'break')
+            : 'work';
+          const nextTime = nextMode === 'work' 
+            ? pomodoro.workDuration * 60
+            : nextMode === 'break'
+            ? pomodoro.breakDuration * 60
+            : pomodoro.longBreakDuration * 60;
+          
+          return {
+            pomodoro: {
+              ...pomodoro,
+              mode: nextMode,
+              timeLeft: nextTime,
+              sessionsCompleted: sessions,
+              isRunning: false,
+            },
+          };
+        }
+        
+        return {
+          pomodoro: { ...pomodoro, timeLeft: pomodoro.timeLeft - 1 },
+        };
+      }),
+      
+      setPomodoroSettings: (settings) => set((state) => ({
+        pomodoro: { ...state.pomodoro, ...settings },
+      })),
       
       // 导入导出
       exportConfig: () => {
-        const { bookmarks, settings } = get();
+        const { bookmarks, settings, todos } = get();
         const config = {
           version: '2.0',
           bookmarks,
           settings,
+          todos,
           exportedAt: new Date().toISOString(),
         };
         return JSON.stringify(config, null, 2);
@@ -112,6 +254,7 @@ export const useAppStore = create<AppState>()(
           const config = JSON.parse(json);
           if (config.bookmarks) set({ bookmarks: config.bookmarks });
           if (config.settings) set({ settings: { ...defaultSettings, ...config.settings } });
+          if (config.todos) set({ todos: config.todos });
           return true;
         } catch {
           return false;
@@ -121,6 +264,8 @@ export const useAppStore = create<AppState>()(
       resetToDefault: () => set({
         bookmarks: defaultBookmarks,
         settings: defaultSettings,
+        todos: [],
+        pomodoro: defaultPomodoro,
       }),
     }),
     {
@@ -128,6 +273,8 @@ export const useAppStore = create<AppState>()(
       partialize: (state) => ({
         bookmarks: state.bookmarks,
         settings: state.settings,
+        todos: state.todos,
+        pomodoro: state.pomodoro,
       }),
     }
   )

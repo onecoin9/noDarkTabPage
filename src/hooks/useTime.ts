@@ -1,31 +1,41 @@
 import { useState, useEffect } from 'react';
+import type { TimeFormat } from '../types';
 
 interface TimeInfo {
   time: string;
   date: string;
 }
 
-export function useTime(showSeconds: boolean = false): TimeInfo {
-  const [timeInfo, setTimeInfo] = useState<TimeInfo>(() => getTimeInfo(showSeconds));
+export function useTime(showSeconds: boolean = false, format: TimeFormat = '24h'): TimeInfo {
+  const [timeInfo, setTimeInfo] = useState<TimeInfo>(() => getTimeInfo(showSeconds, format));
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setTimeInfo(getTimeInfo(showSeconds));
+      setTimeInfo(getTimeInfo(showSeconds, format));
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [showSeconds]);
+  }, [showSeconds, format]);
 
   return timeInfo;
 }
 
-function getTimeInfo(showSeconds: boolean): TimeInfo {
+function getTimeInfo(showSeconds: boolean, format: TimeFormat): TimeInfo {
   const now = new Date();
-  const hours = String(now.getHours()).padStart(2, '0');
+  let hours = now.getHours();
   const minutes = String(now.getMinutes()).padStart(2, '0');
   const seconds = String(now.getSeconds()).padStart(2, '0');
   
-  const time = showSeconds ? `${hours}:${minutes}:${seconds}` : `${hours}:${minutes}`;
+  let period = '';
+  if (format === '12h') {
+    period = hours >= 12 ? ' PM' : ' AM';
+    hours = hours % 12 || 12;
+  }
+  
+  const hoursStr = String(hours).padStart(2, '0');
+  const time = showSeconds 
+    ? `${hoursStr}:${minutes}:${seconds}${period}`
+    : `${hoursStr}:${minutes}${period}`;
   
   const days = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
   const year = now.getFullYear();

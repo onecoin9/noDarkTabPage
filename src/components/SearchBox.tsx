@@ -8,12 +8,14 @@ const searchUrls: Record<SearchEngine, string> = {
   google: 'https://www.google.com/search?q=',
   baidu: 'https://www.baidu.com/s?wd=',
   bing: 'https://www.bing.com/search?q=',
+  duckduckgo: 'https://duckduckgo.com/?q=',
 };
 
 const engineNames: Record<SearchEngine, string> = {
   google: 'Google',
   baidu: '百度',
   bing: 'Bing',
+  duckduckgo: 'DuckDuckGo',
 };
 
 export function SearchBox() {
