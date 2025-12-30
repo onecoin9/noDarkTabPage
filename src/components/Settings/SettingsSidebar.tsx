@@ -6,7 +6,8 @@ import {
   Database, 
   Info,
   Sparkles,
-  LayoutGrid
+  LayoutGrid,
+  Cloud
 } from 'lucide-react';
 import { useAppStore } from '../../stores/useAppStore';
 import type { SettingsTab } from '../../types';
@@ -24,6 +25,7 @@ const menuItems: MenuItem[] = [
   { id: 'features', label: '功能开关', icon: <Settings2 size={18} /> },
   { id: 'time', label: '时间设置', icon: <Clock size={18} /> },
   { id: 'data', label: '数据管理', icon: <Database size={18} /> },
+  { id: 'sync', label: '云同步', icon: <Cloud size={18} /> },
   { id: 'about', label: '关于', icon: <Info size={18} /> },
 ];
 

@@ -109,6 +109,7 @@ export type SettingsTab =
   | 'time'
   | 'cards'
   | 'data'
+  | 'sync'
   | 'about';
 
 // 配置导出格式

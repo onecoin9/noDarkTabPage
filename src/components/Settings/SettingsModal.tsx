@@ -8,6 +8,7 @@ import { WidgetsSettings } from './WidgetsSettings';
 import { FeaturesSettings } from './FeaturesSettings';
 import { TimeSettings } from './TimeSettings';
 import { DataSettings } from './DataSettings';
+import { CloudSyncSettings } from './CloudSyncSettings';
 import { AboutSettings } from './AboutSettings';
 
 export function SettingsModal() {
@@ -29,6 +30,8 @@ export function SettingsModal() {
         return <TimeSettings />;
       case 'data':
         return <DataSettings />;
+      case 'sync':
+        return <CloudSyncSettings />;
       case 'about':
         return <AboutSettings />;
       default:
