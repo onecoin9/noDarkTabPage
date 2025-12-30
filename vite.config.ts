@@ -12,5 +12,5 @@ export default defineConfig({
     }),
     tailwindcss(),
   ],
-  base: '/', // 使用自定义域名时用 /
+  base: '/noDarkTabPage/', // GitHub Pages 子路径
 })
