@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { RefreshCw } from 'lucide-react';
 import { useAppStore } from '../../stores/useAppStore';
 import type { BackgroundType } from '../../types';
 
@@ -21,9 +23,23 @@ const unsplashCategories = [
   { name: '太空', value: 'space' },
 ];
 
+const wallhavenCategories = [
+  { name: '热门', value: 'toplist' },
+  { name: '随机', value: 'random' },
+  { name: '动漫', value: 'anime' },
+  { name: '风景', value: 'landscape' },
+  { name: '极简', value: 'minimalist' },
+  { name: '赛博朋克', value: 'cyberpunk' },
+];
+
+// Wallhaven API Key
+const WALLHAVEN_API_KEY = 'KvxNbQI9CHuy7fPc5BqmMdhVMtxr4zzo';
+
 export function WallpaperSettings() {
   const settings = useAppStore((s) => s.settings);
   const updateSettings = useAppStore((s) => s.updateSettings);
+  const [loading, setLoading] = useState(false);
+  const [wallhavenCategory, setWallhavenCategory] = useState('toplist');
 
   const setBackgroundType = (type: BackgroundType) => {
     updateSettings({
@@ -54,12 +70,50 @@ export function WallpaperSettings() {
     });
   };
 
+  const fetchWallhavenImage = async (category: string) => {
+    setLoading(true);
+    try {
+      let url = `https://wallhaven.cc/api/v1/search?apikey=${WALLHAVEN_API_KEY}&sorting=${category === 'toplist' ? 'toplist' : 'random'}&atleast=1920x1080&ratios=16x9&purity=100`;
+      
+      if (category !== 'toplist' && category !== 'random') {
+        url += `&q=${category}`;
+      }
+
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      if (data.data && data.data.length > 0) {
+        const randomIndex = Math.floor(Math.random() * Math.min(data.data.length, 24));
+        const imageUrl = data.data[randomIndex].path;
+        
+        updateSettings({
+          background: { 
+            ...settings.background, 
+            type: 'wallhaven', 
+            value: imageUrl,
+            wallhavenCategory: category,
+          },
+        });
+      }
+    } catch (error) {
+      console.error('Failed to fetch Wallhaven image:', error);
+      alert('获取壁纸失败，请稍后重试');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleWallhavenCategory = (category: string) => {
+    setWallhavenCategory(category);
+    fetchWallhavenImage(category);
+  };
+
   return (
     <div className="space-y-8">
       <section>
         <h3 className="text-lg font-medium text-white mb-4">壁纸类型</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {(['gradient', 'unsplash', 'bing', 'custom'] as BackgroundType[]).map((type) => (
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          {(['gradient', 'wallhaven', 'unsplash', 'bing', 'custom'] as BackgroundType[]).map((type) => (
             <button
               key={type}
               onClick={() => setBackgroundType(type)}
@@ -70,6 +124,7 @@ export function WallpaperSettings() {
               }`}
             >
               {type === 'gradient' && '渐变色'}
+              {type === 'wallhaven' && 'Wallhaven'}
               {type === 'unsplash' && 'Unsplash'}
               {type === 'bing' && 'Bing 每日'}
               {type === 'custom' && '自定义'}
@@ -99,6 +154,50 @@ export function WallpaperSettings() {
               </button>
             ))}
           </div>
+        </section>
+      )}
+
+      {settings.background.type === 'wallhaven' && (
+        <section>
+          <h3 className="text-lg font-medium text-white mb-4">Wallhaven 壁纸</h3>
+          <p className="text-slate-400 text-sm mb-4">从 Wallhaven 获取高质量壁纸</p>
+          
+          <div className="grid grid-cols-3 md:grid-cols-6 gap-3 mb-4">
+            {wallhavenCategories.map((cat) => (
+              <button
+                key={cat.value}
+                onClick={() => handleWallhavenCategory(cat.value)}
+                disabled={loading}
+                className={`p-3 rounded-xl border transition-all ${
+                  wallhavenCategory === cat.value
+                    ? 'border-indigo-500 bg-indigo-500/20 text-white'
+                    : 'border-slate-600 bg-slate-800/50 text-slate-300 hover:border-slate-500'
+                } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                {cat.name}
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={() => fetchWallhavenImage(wallhavenCategory)}
+            disabled={loading}
+            className="flex items-center justify-center gap-2 w-full p-3 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 text-white rounded-xl transition-colors"
+          >
+            <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
+            {loading ? '加载中...' : '换一张壁纸'}
+          </button>
+
+          {settings.background.value && settings.background.type === 'wallhaven' && (
+            <div className="mt-4">
+              <p className="text-slate-400 text-sm mb-2">当前壁纸预览：</p>
+              <img 
+                src={settings.background.value} 
+                alt="当前壁纸" 
+                className="w-full h-32 object-cover rounded-xl"
+              />
+            </div>
+          )}
         </section>
       )}
 

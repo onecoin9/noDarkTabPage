@@ -8,12 +8,13 @@ export interface Bookmark {
 }
 
 // 背景类型
-export type BackgroundType = 'gradient' | 'unsplash' | 'bing' | 'custom' | 'solid';
+export type BackgroundType = 'gradient' | 'unsplash' | 'bing' | 'wallhaven' | 'custom' | 'solid';
 
 export interface BackgroundConfig {
   type: BackgroundType;
   value: string;
   unsplashCategory?: string;
+  wallhavenCategory?: string;
   blur?: number;
   brightness?: number;
 }

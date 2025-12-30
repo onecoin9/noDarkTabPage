@@ -13,6 +13,7 @@ export function Background() {
         return { ...baseStyle, background: background.value };
       case 'custom':
       case 'unsplash':
+      case 'wallhaven':
         return {
           ...baseStyle,
           backgroundImage: `url(${background.value})`,
