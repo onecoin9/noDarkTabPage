@@ -41,6 +41,7 @@ export function Pomodoro() {
       minSize={50}
       maxSize={150}
       onSizeChange={(size) => updateSettings({ pomodoroScale: size })}
+      sizeUnit="%"
     >
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}

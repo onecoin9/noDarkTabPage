@@ -51,6 +51,7 @@ export function DailyQuote() {
       minSize={50}
       maxSize={150}
       onSizeChange={(size) => updateSettings({ quoteScale: size })}
+      sizeUnit="%"
     >
       <motion.div
         initial={{ opacity: 0, y: 20 }}

@@ -100,6 +100,7 @@ export function Weather() {
       minSize={50}
       maxSize={150}
       onSizeChange={(size) => updateSettings({ weatherScale: size })}
+      sizeUnit="%"
     >
       {content}
     </EditableWidget>

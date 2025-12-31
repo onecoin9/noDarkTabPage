@@ -36,6 +36,7 @@ export function TodoList() {
       minSize={50}
       maxSize={150}
       onSizeChange={(size) => updateSettings({ todoScale: size })}
+      sizeUnit="%"
     >
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
