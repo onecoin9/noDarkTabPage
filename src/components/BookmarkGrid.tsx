@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, X, Settings } from 'lucide-react';
+import { Plus, X, Settings, Trash2 } from 'lucide-react';
 import { useAppStore } from '../stores/useAppStore';
 import type { Bookmark } from '../types';
 
@@ -72,7 +72,7 @@ function BookmarkItem({ bookmark, index, onEdit }: Omit<BookmarkItemProps, 'onDe
         <span className="text-sm font-medium text-center truncate w-full">{bookmark.title}</span>
       </motion.a>
       
-      {/* Hover 时显示设置按钮 */}
+      {/* Hover 时显示设置按钮 - 在卡片内部 */}
       <AnimatePresence>
         {showSettings && (
           <motion.button
@@ -84,9 +84,9 @@ function BookmarkItem({ bookmark, index, onEdit }: Omit<BookmarkItemProps, 'onDe
               e.stopPropagation();
               onEdit(bookmark);
             }}
-            className="absolute -top-2 -right-2 w-7 h-7 bg-white/20 hover:bg-white/40 backdrop-blur-sm rounded-full flex items-center justify-center text-white shadow-lg transition-all"
+            className="absolute top-2 right-2 w-6 h-6 bg-black/30 hover:bg-black/50 backdrop-blur-sm rounded-md flex items-center justify-center text-white/70 hover:text-white transition-all"
           >
-            <Settings size={14} />
+            <Settings size={12} />
           </motion.button>
         )}
       </AnimatePresence>
@@ -151,19 +151,12 @@ function EditModal({ bookmark, isNew, onSave, onDelete, onClose }: EditModalProp
           <h3 className="text-xl font-semibold text-white">
             {isNew ? '添加书签' : '编辑书签'}
           </h3>
-          {!isNew && onDelete && (
-            <button
-              onClick={() => {
-                if (bookmark && confirm('确定删除这个书签吗？')) {
-                  onDelete(bookmark.id);
-                  onClose();
-                }
-              }}
-              className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-lg transition-colors"
-            >
-              <X size={20} />
-            </button>
-          )}
+          <button
+            onClick={onClose}
+            className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+          >
+            <X size={20} />
+          </button>
         </div>
         
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -287,6 +280,23 @@ function EditModal({ bookmark, isNew, onSave, onDelete, onClose }: EditModalProp
               保存
             </button>
           </div>
+          
+          {/* 删除按钮 - 仅编辑时显示 */}
+          {!isNew && onDelete && (
+            <button
+              type="button"
+              onClick={() => {
+                if (bookmark && confirm('确定删除这个书签吗？')) {
+                  onDelete(bookmark.id);
+                  onClose();
+                }
+              }}
+              className="w-full mt-3 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 rounded-xl transition-colors flex items-center justify-center gap-2"
+            >
+              <Trash2 size={16} />
+              删除书签
+            </button>
+          )}
         </form>
       </motion.div>
     </motion.div>
