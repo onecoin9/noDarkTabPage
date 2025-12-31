@@ -1,5 +1,8 @@
 # 云端同步方案
 
+> 📍 **文档位置**: `docs/api/CLOUD_SYNC.md`  
+> 📸 **截图目录**: `docs/screenshots/CLOUD_SYNC/`
+
 ## 推荐方案：Supabase
 
 **Supabase** 是一个开源的 Firebase 替代品，提供：

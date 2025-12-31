@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Cloud, Sun, CloudRain, CloudSnow, Wind, MapPin, RefreshCw } from 'lucide-react';
+import { Cloud, Sun, CloudRain, CloudSnow, Wind, MapPin, RefreshCw, AlertCircle } from 'lucide-react';
 import { useAppStore } from '../../stores/useAppStore';
 import { EditableWidget } from '../EditableWidget';
-import { fetchWeather, getCityByIP } from '../../lib/weather';
+import { fetchWeather, getCityByIP, isApiKeyConfigured } from '../../lib/weather';
 
 interface WeatherData {
   temp: number;
@@ -12,6 +12,7 @@ interface WeatherData {
   humidity: number;
   wind: number;
   city: string;
+  feelsLike?: number;
 }
 
 export function Weather() {
@@ -24,18 +25,29 @@ export function Weather() {
   const size = settings.weatherSize || 200;
 
   const loadWeather = async () => {
+    // 检查 API Key
+    if (!isApiKeyConfigured()) {
+      setError('请配置和风天气 API Key');
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError(null);
     
     try {
       let city = settings.weatherCity;
       
-      // 如果城市为空或是默认值，尝试自动定位
-      if (!city || city === '北京') {
+      // 如果城市为空，尝试自动定位
+      if (!city) {
         const detectedCity = await getCityByIP();
         if (detectedCity) {
           city = detectedCity;
           updateSettings({ weatherCity: detectedCity });
+        } else {
+          // 如果定位失败，使用默认城市
+          city = '深圳';
+          updateSettings({ weatherCity: '深圳' });
         }
       }
       
@@ -101,15 +113,35 @@ export function Weather() {
       className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20"
       style={{ width: `${size}px` }}
     >
-      <div className="text-center">
-        <div className="text-white/60 mb-2" style={{ fontSize: `${fontSize}px` }}>{error}</div>
-        <button
-          onClick={loadWeather}
-          className="flex items-center gap-1 mx-auto px-3 py-1 bg-white/20 hover:bg-white/30 rounded-lg text-white text-sm transition-colors"
-        >
-          <RefreshCw size={12} />
-          <span>重试</span>
-        </button>
+      <div className="text-center space-y-2">
+        <AlertCircle size={24} className="text-yellow-400 mx-auto" />
+        <div className="text-white/60 text-xs leading-relaxed">
+          {error === '请配置和风天气 API Key' ? (
+            <>
+              <div className="mb-2">{error}</div>
+              <div className="text-white/40">
+                1. 访问 <a href="https://dev.qweather.com/" target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:underline">dev.qweather.com</a>
+              </div>
+              <div className="text-white/40">
+                2. 注册并获取免费 API Key
+              </div>
+              <div className="text-white/40">
+                3. 在 src/lib/weather.ts 中配置
+              </div>
+            </>
+          ) : (
+            <div>{error}</div>
+          )}
+        </div>
+        {error !== '请配置和风天气 API Key' && (
+          <button
+            onClick={loadWeather}
+            className="flex items-center gap-1 mx-auto px-3 py-1 bg-white/20 hover:bg-white/30 rounded-lg text-white text-xs transition-colors"
+          >
+            <RefreshCw size={12} />
+            <span>重试</span>
+          </button>
+        )}
       </div>
     </motion.div>
   ) : (
@@ -122,7 +154,16 @@ export function Weather() {
       <div className="flex items-center gap-4">
         {weather && getWeatherIcon(weather.icon)}
         <div className="flex-1">
-          <div className="font-bold text-white" style={{ fontSize: `${tempFontSize}px` }}>{displayTemp}{tempUnit}</div>
+          <div className="font-bold text-white" style={{ fontSize: `${tempFontSize}px` }}>
+            {displayTemp}{tempUnit}
+            {weather?.feelsLike && weather.feelsLike !== weather.temp && (
+              <span className="text-white/50 ml-1" style={{ fontSize: `${fontSize}px` }}>
+                体感{settings.weatherUnit === 'fahrenheit' 
+                  ? Math.round(weather.feelsLike * 9 / 5 + 32) 
+                  : weather.feelsLike}°
+              </span>
+            )}
+          </div>
           <div className="text-white/60 flex items-center gap-1" style={{ fontSize: `${fontSize}px` }}>
             <MapPin size={12} />
             <span>{weather?.city} · {weather?.description}</span>
