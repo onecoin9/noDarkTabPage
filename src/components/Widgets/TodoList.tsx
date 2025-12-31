@@ -13,7 +13,8 @@ export function TodoList() {
   const toggleTodo = useAppStore((s) => s.toggleTodo);
   const removeTodo = useAppStore((s) => s.removeTodo);
   const position = settings.todoPosition || { preset: 'center-right', offsetX: 0, offsetY: 0 };
-  const size = settings.todoSize || 280;
+  const width = settings.todoWidth || 280;
+  const height = settings.todoHeight || 320;
 
   const handleAdd = () => {
     if (!input.trim()) return;
@@ -26,24 +27,28 @@ export function TodoList() {
   };
 
   const completedCount = todos.filter((t) => t.completed).length;
-  const fontSize = Math.round(size / 280 * 14);
-  const iconSize = Math.round(size / 280 * 18);
+  const fontSize = Math.max(12, Math.min(16, Math.round(width / 280 * 14)));
+  const iconSize = Math.max(14, Math.min(20, Math.round(width / 280 * 18)));
 
   return (
     <EditableWidget
       name="待办"
       position={position}
       onPositionChange={(pos) => updateSettings({ todoPosition: pos })}
-      size={size}
-      minSize={200}
-      maxSize={500}
-      onSizeChange={(size) => updateSettings({ todoSize: size })}
+      width={width}
+      height={height}
+      minWidth={200}
+      maxWidth={600}
+      minHeight={200}
+      maxHeight={800}
+      onWidthChange={(w) => updateSettings({ todoWidth: w })}
+      onHeightChange={(h) => updateSettings({ todoHeight: h })}
     >
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20"
-        style={{ width: `${size}px` }}
+        className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20 flex flex-col"
+        style={{ width: `${width}px`, height: `${height}px` }}
       >
         <div className="flex items-center justify-between mb-3">
           <span className="text-white/80" style={{ fontSize: `${fontSize}px` }}>✅ 待办事项</span>
@@ -65,7 +70,7 @@ export function TodoList() {
           </button>
         </div>
 
-        <div className="space-y-2 overflow-y-auto" style={{ maxHeight: `${size * 0.6}px` }}>
+        <div className="flex-1 space-y-2 overflow-y-auto">
           <AnimatePresence>
             {todos.length === 0 ? (
               <p className="text-white/40 text-center py-4" style={{ fontSize: `${fontSize}px` }}>暂无待办事项</p>
@@ -80,7 +85,7 @@ export function TodoList() {
                 >
                   <button
                     onClick={() => toggleTodo(todo.id)}
-                    className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${
+                    className={`w-5 h-5 flex-shrink-0 rounded border flex items-center justify-center transition-colors ${
                       todo.completed ? 'bg-green-500 border-green-500' : 'border-white/30 hover:border-white/50'
                     }`}
                   >
@@ -94,7 +99,7 @@ export function TodoList() {
                   </span>
                   <button
                     onClick={() => removeTodo(todo.id)}
-                    className="p-1 opacity-0 group-hover:opacity-100 hover:bg-red-500/20 rounded transition-all"
+                    className="p-1 flex-shrink-0 opacity-0 group-hover:opacity-100 hover:bg-red-500/20 rounded transition-all"
                   >
                     <Trash2 size={14} className="text-red-400" />
                   </button>

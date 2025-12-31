@@ -29,7 +29,8 @@ export function WidgetsSettings() {
       icon: '✅', 
       description: '管理你的任务列表',
       positionKey: 'todoPosition',
-      sizeKey: 'todoSize',
+      widthKey: 'todoWidth',
+      heightKey: 'todoHeight',
     },
     { 
       key: 'showQuote', 
@@ -88,7 +89,9 @@ export function WidgetsSettings() {
             const isEnabled = settings[widget.key as keyof typeof settings];
             const hasPosition = 'positionKey' in widget;
             const side = hasPosition ? getSide(widget.positionKey!) : 'left';
-            const size = hasPosition ? (settings[widget.sizeKey as keyof typeof settings] as number || 200) : 200;
+            const size = hasPosition && 'sizeKey' in widget ? (settings[widget.sizeKey as keyof typeof settings] as number || 200) : 200;
+            const width = hasPosition && 'widthKey' in widget ? (settings[widget.widthKey as keyof typeof settings] as number || 280) : 280;
+            const height = hasPosition && 'heightKey' in widget ? (settings[widget.heightKey as keyof typeof settings] as number || 320) : 320;
             
             return (
               <div
@@ -150,27 +153,75 @@ export function WidgetsSettings() {
                       </div>
                     </div>
 
-                    {/* 大小调整 */}
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-slate-400 text-sm">大小</span>
-                        <span className="text-indigo-400 text-sm font-medium">{size}px</span>
+                    {/* 大小调整 - 单一尺寸 */}
+                    {'sizeKey' in widget && (
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-slate-400 text-sm">大小</span>
+                          <span className="text-indigo-400 text-sm font-medium">{size}px</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="100"
+                          max="400"
+                          step="20"
+                          value={size}
+                          onChange={(e) => updateSettings({ [widget.sizeKey!]: Number(e.target.value) })}
+                          className="w-full"
+                        />
+                        <div className="flex justify-between text-xs text-slate-500 mt-1">
+                          <span>100px</span>
+                          <span>250px</span>
+                          <span>400px</span>
+                        </div>
                       </div>
-                      <input
-                        type="range"
-                        min="100"
-                        max="400"
-                        step="20"
-                        value={size}
-                        onChange={(e) => updateSettings({ [widget.sizeKey!]: Number(e.target.value) })}
-                        className="w-full"
-                      />
-                      <div className="flex justify-between text-xs text-slate-500 mt-1">
-                        <span>100px</span>
-                        <span>250px</span>
-                        <span>400px</span>
-                      </div>
-                    </div>
+                    )}
+
+                    {/* 宽高独立调整 */}
+                    {'widthKey' in widget && 'heightKey' in widget && (
+                      <>
+                        <div>
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-slate-400 text-sm">宽度</span>
+                            <span className="text-indigo-400 text-sm font-medium">{width}px</span>
+                          </div>
+                          <input
+                            type="range"
+                            min="200"
+                            max="600"
+                            step="20"
+                            value={width}
+                            onChange={(e) => updateSettings({ [widget.widthKey!]: Number(e.target.value) })}
+                            className="w-full"
+                          />
+                          <div className="flex justify-between text-xs text-slate-500 mt-1">
+                            <span>200px</span>
+                            <span>400px</span>
+                            <span>600px</span>
+                          </div>
+                        </div>
+                        <div>
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-slate-400 text-sm">高度</span>
+                            <span className="text-indigo-400 text-sm font-medium">{height}px</span>
+                          </div>
+                          <input
+                            type="range"
+                            min="200"
+                            max="800"
+                            step="20"
+                            value={height}
+                            onChange={(e) => updateSettings({ [widget.heightKey!]: Number(e.target.value) })}
+                            className="w-full"
+                          />
+                          <div className="flex justify-between text-xs text-slate-500 mt-1">
+                            <span>200px</span>
+                            <span>500px</span>
+                            <span>800px</span>
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </div>
                 )}
               </div>

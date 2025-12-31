@@ -13,6 +13,15 @@ interface EditableWidgetProps {
   minSize?: number;
   maxSize?: number;
   onSizeChange?: (size: number) => void;
+  // 宽高独立调整
+  width?: number;
+  height?: number;
+  minWidth?: number;
+  maxWidth?: number;
+  minHeight?: number;
+  maxHeight?: number;
+  onWidthChange?: (width: number) => void;
+  onHeightChange?: (height: number) => void;
   className?: string;
 }
 
@@ -50,14 +59,26 @@ export function EditableWidget({
   minSize = 40,
   maxSize = 200,
   onSizeChange,
+  width,
+  height,
+  minWidth = 200,
+  maxWidth = 600,
+  minHeight = 200,
+  maxHeight = 800,
+  onWidthChange,
+  onHeightChange,
   className = '',
 }: EditableWidgetProps) {
   const { isEditMode } = useEditMode();
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
+  const [isResizingWidth, setIsResizingWidth] = useState(false);
+  const [isResizingHeight, setIsResizingHeight] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [startOffset, setStartOffset] = useState({ x: 0, y: 0 });
   const [startSize, setStartSize] = useState(size || 80);
+  const [startWidth, setStartWidth] = useState(width || 280);
+  const [startHeight, setStartHeight] = useState(height || 320);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const handleDragStart = (e: React.MouseEvent) => {
@@ -75,8 +96,24 @@ export function EditableWidget({
     setStartSize(size || 80);
   };
 
+  const handleResizeWidthStart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsResizingWidth(true);
+    setDragStart({ x: e.clientX, y: e.clientY });
+    setStartWidth(width || 280);
+  };
+
+  const handleResizeHeightStart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsResizingHeight(true);
+    setDragStart({ x: e.clientX, y: e.clientY });
+    setStartHeight(height || 320);
+  };
+
   useEffect(() => {
-    if (!isDragging && !isResizing) return;
+    if (!isDragging && !isResizing && !isResizingWidth && !isResizingHeight) return;
 
     const handleMouseMove = (e: MouseEvent) => {
       if (isDragging) {
@@ -95,11 +132,23 @@ export function EditableWidget({
         const newSize = Math.max(minSize, Math.min(maxSize, startSize + deltaY * 0.5));
         onSizeChange(Math.round(newSize));
       }
+      if (isResizingWidth && onWidthChange) {
+        const deltaX = e.clientX - dragStart.x;
+        const newWidth = Math.max(minWidth, Math.min(maxWidth, startWidth + deltaX));
+        onWidthChange(Math.round(newWidth));
+      }
+      if (isResizingHeight && onHeightChange) {
+        const deltaY = e.clientY - dragStart.y;
+        const newHeight = Math.max(minHeight, Math.min(maxHeight, startHeight + deltaY));
+        onHeightChange(Math.round(newHeight));
+      }
     };
 
     const handleMouseUp = () => {
       setIsDragging(false);
       setIsResizing(false);
+      setIsResizingWidth(false);
+      setIsResizingHeight(false);
     };
 
     window.addEventListener('mousemove', handleMouseMove);
@@ -108,7 +157,7 @@ export function EditableWidget({
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isDragging, isResizing, dragStart, startOffset, startSize, position, onPositionChange, onSizeChange, minSize, maxSize]);
+  }, [isDragging, isResizing, isResizingWidth, isResizingHeight, dragStart, startOffset, startSize, startWidth, startHeight, position, onPositionChange, onSizeChange, onWidthChange, onHeightChange, minSize, maxSize, minWidth, maxWidth, minHeight, maxHeight]);
 
   const positionStyle = getPositionStyle(position);
 
@@ -142,12 +191,12 @@ export function EditableWidget({
 
       {/* 虚线边框 */}
       <div className={`absolute -inset-2 border-2 border-dashed rounded-xl pointer-events-none transition-colors ${
-        isDragging || isResizing ? 'border-indigo-400' : 'border-indigo-500/40 group-hover:border-indigo-500/70'
+        isDragging || isResizing || isResizingWidth || isResizingHeight ? 'border-indigo-400' : 'border-indigo-500/40 group-hover:border-indigo-500/70'
       }`} />
 
       {children}
 
-      {/* 调整大小手柄 */}
+      {/* 调整大小手柄 - 等比例缩放 */}
       {onSizeChange && (
         <motion.div
           onMouseDown={handleResizeStart}
@@ -156,14 +205,35 @@ export function EditableWidget({
         />
       )}
 
+      {/* 调整宽度手柄 */}
+      {onWidthChange && (
+        <motion.div
+          onMouseDown={handleResizeWidthStart}
+          whileHover={{ scale: 1.3 }}
+          className="absolute top-1/2 -translate-y-1/2 -right-1.5 w-3 h-8 bg-indigo-500 rounded-full cursor-ew-resize shadow-md hover:bg-indigo-400 transition-colors"
+        />
+      )}
+
+      {/* 调整高度手柄 */}
+      {onHeightChange && (
+        <motion.div
+          onMouseDown={handleResizeHeightStart}
+          whileHover={{ scale: 1.3 }}
+          className="absolute left-1/2 -translate-x-1/2 -bottom-1.5 w-8 h-3 bg-indigo-500 rounded-full cursor-ns-resize shadow-md hover:bg-indigo-400 transition-colors"
+        />
+      )}
+
       {/* 位置提示 */}
-      {(isDragging || isResizing) && (
+      {(isDragging || isResizing || isResizingWidth || isResizingHeight) && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="absolute -bottom-7 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-slate-800 text-white text-xs rounded shadow-lg whitespace-nowrap"
         >
-          {isResizing && size ? `${size}px` : `${position.offsetX}, ${position.offsetY}`}
+          {isResizing && size ? `${size}px` : 
+           isResizingWidth && width ? `宽: ${width}px` :
+           isResizingHeight && height ? `高: ${height}px` :
+           `${position.offsetX}, ${position.offsetY}`}
         </motion.div>
       )}
     </div>

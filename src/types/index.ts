@@ -151,7 +151,8 @@ export interface AppSettings {
   // 小组件大小 (像素 px)
   weatherSize: number;
   pomodoroSize: number;
-  todoSize: number;
+  todoWidth: number;
+  todoHeight: number;
   quoteSize: number;
   
   // 天气
