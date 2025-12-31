@@ -18,6 +18,7 @@ export function Weather() {
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(true);
   const position = settings.weatherPosition || { preset: 'center-left', offsetX: 0, offsetY: -100 };
+  const scale = settings.weatherScale || 100;
 
   useEffect(() => {
     const mockWeather = () => {
@@ -37,12 +38,13 @@ export function Weather() {
   }, [settings.weatherCity]);
 
   const getWeatherIcon = (icon: string) => {
+    const iconSize = Math.round(32 * scale / 100);
     switch (icon) {
-      case 'sun': return <Sun size={32} className="text-yellow-400" />;
-      case 'cloud': return <Cloud size={32} className="text-gray-300" />;
-      case 'rain': return <CloudRain size={32} className="text-blue-400" />;
-      case 'snow': return <CloudSnow size={32} className="text-blue-200" />;
-      default: return <Sun size={32} className="text-yellow-400" />;
+      case 'sun': return <Sun size={iconSize} className="text-yellow-400" />;
+      case 'cloud': return <Cloud size={iconSize} className="text-gray-300" />;
+      case 'rain': return <CloudRain size={iconSize} className="text-blue-400" />;
+      case 'snow': return <CloudSnow size={iconSize} className="text-blue-200" />;
+      default: return <Sun size={iconSize} className="text-yellow-400" />;
     }
   };
 
@@ -52,7 +54,10 @@ export function Weather() {
   const tempUnit = settings.weatherUnit === 'fahrenheit' ? '°F' : '°C';
 
   const content = loading ? (
-    <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20">
+    <div 
+      className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20"
+      style={{ transform: `scale(${scale / 100})`, transformOrigin: 'top left' }}
+    >
       <div className="animate-pulse flex items-center gap-3">
         <div className="w-12 h-12 bg-white/20 rounded-full" />
         <div className="space-y-2">
@@ -66,6 +71,7 @@ export function Weather() {
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20"
+      style={{ transform: `scale(${scale / 100})`, transformOrigin: 'top left' }}
     >
       <div className="flex items-center gap-4">
         {weather && getWeatherIcon(weather.icon)}
@@ -90,6 +96,10 @@ export function Weather() {
       name="天气"
       position={position}
       onPositionChange={(pos) => updateSettings({ weatherPosition: pos })}
+      size={scale}
+      minSize={50}
+      maxSize={150}
+      onSizeChange={(size) => updateSettings({ weatherScale: size })}
     >
       {content}
     </EditableWidget>

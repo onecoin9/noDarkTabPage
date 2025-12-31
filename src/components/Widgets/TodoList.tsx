@@ -13,6 +13,7 @@ export function TodoList() {
   const toggleTodo = useAppStore((s) => s.toggleTodo);
   const removeTodo = useAppStore((s) => s.removeTodo);
   const position = settings.todoPosition || { preset: 'center-right', offsetX: 0, offsetY: 0 };
+  const scale = settings.todoScale || 100;
 
   const handleAdd = () => {
     if (!input.trim()) return;
@@ -31,11 +32,16 @@ export function TodoList() {
       name="待办"
       position={position}
       onPositionChange={(pos) => updateSettings({ todoPosition: pos })}
+      size={scale}
+      minSize={50}
+      maxSize={150}
+      onSizeChange={(size) => updateSettings({ todoScale: size })}
     >
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20 w-72"
+        style={{ transform: `scale(${scale / 100})`, transformOrigin: 'top right' }}
       >
         <div className="flex items-center justify-between mb-3">
           <span className="text-white/80 text-sm">✅ 待办事项</span>

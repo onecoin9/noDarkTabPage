@@ -66,6 +66,10 @@ const defaultSettings: AppSettings = {
   pomodoroPosition: { preset: 'center-left', offsetX: 0, offsetY: 100 },
   todoPosition: { preset: 'center-right', offsetX: 0, offsetY: 0 },
   quotePosition: { preset: 'center', offsetX: 0, offsetY: 60 },
+  weatherScale: 100,
+  pomodoroScale: 100,
+  todoScale: 100,
+  quoteScale: 100,
   weatherCity: '北京',
   weatherUnit: 'celsius',
 };

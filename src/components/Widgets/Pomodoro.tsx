@@ -13,6 +13,7 @@ export function Pomodoro() {
   const resetPomodoro = useAppStore((s) => s.resetPomodoro);
   const tickPomodoro = useAppStore((s) => s.tickPomodoro);
   const position = settings.pomodoroPosition || { preset: 'center-left', offsetX: 0, offsetY: 100 };
+  const scale = settings.pomodoroScale || 100;
 
   useEffect(() => {
     if (!pomodoro.isRunning) return;
@@ -36,11 +37,16 @@ export function Pomodoro() {
       name="番茄钟"
       position={position}
       onPositionChange={(pos) => updateSettings({ pomodoroPosition: pos })}
+      size={scale}
+      minSize={50}
+      maxSize={150}
+      onSizeChange={(size) => updateSettings({ pomodoroScale: size })}
     >
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20"
+        style={{ transform: `scale(${scale / 100})`, transformOrigin: 'top left' }}
       >
         <div className="flex items-center justify-between mb-3">
           <span className="text-white/80 text-sm">🍅 番茄钟</span>

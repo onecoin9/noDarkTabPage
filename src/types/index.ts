@@ -148,6 +148,12 @@ export interface AppSettings {
   todoPosition: ComponentPosition;
   quotePosition: ComponentPosition;
   
+  // 小组件大小 (缩放比例 50-150)
+  weatherScale: number;
+  pomodoroScale: number;
+  todoScale: number;
+  quoteScale: number;
+  
   // 天气
   weatherCity: string;
   weatherUnit: 'celsius' | 'fahrenheit';
