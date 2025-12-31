@@ -2,6 +2,7 @@ import {
   Clock,
   SearchBox,
   BookmarkGrid,
+  BookmarkPanelButton,
   SettingsButton,
   Background,
   CustomCss,
@@ -44,6 +45,7 @@ function App() {
       <CustomCss />
       <SettingsButton />
       <EditModeButton />
+      <BookmarkPanelButton />
       <SettingsModal />
 
       {/* 时钟 */}

@@ -178,10 +178,15 @@ interface EditModalProps {
 }
 
 function EditModal({ bookmark, isNew, onSave, onDelete, onClose }: EditModalProps) {
+  const bookmarks = useAppStore((s) => s.bookmarks);
   const [title, setTitle] = useState(bookmark?.title || '');
   const [url, setUrl] = useState(bookmark?.url || '');
   const [icon, setIcon] = useState(bookmark?.icon || '🔗');
+  const [category, setCategory] = useState(bookmark?.category || '');
   const [showIconPicker, setShowIconPicker] = useState(false);
+
+  // 获取所有已存在的分类
+  const existingCategories = Array.from(new Set(bookmarks.map(b => b.category).filter(Boolean))) as string[];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -192,6 +197,7 @@ function EditModal({ bookmark, isNew, onSave, onDelete, onClose }: EditModalProp
       title: title.trim(),
       url: url.trim().startsWith('http') ? url.trim() : `https://${url.trim()}`,
       icon: icon || '🔗',
+      category: category.trim() || undefined,
     });
   };
 
@@ -338,6 +344,24 @@ function EditModal({ bookmark, isNew, onSave, onDelete, onClose }: EditModalProp
               placeholder="https://example.com"
               className="w-full px-4 py-2 bg-slate-800 border border-slate-600 rounded-xl text-white focus:outline-none focus:border-indigo-500"
             />
+          </div>
+          
+          <div>
+            <label className="text-slate-400 text-sm mb-1 block">分类（可选）</label>
+            <input
+              type="text"
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              placeholder="例如：工作、学习、娱乐"
+              list="categories"
+              className="w-full px-4 py-2 bg-slate-800 border border-slate-600 rounded-xl text-white focus:outline-none focus:border-indigo-500"
+            />
+            <datalist id="categories">
+              {existingCategories.map((cat) => (
+                <option key={cat} value={cat} />
+              ))}
+            </datalist>
+            <p className="text-slate-500 text-xs mt-1">添加分类后可在书签文件夹中查看</p>
           </div>
           
           <div className="flex gap-3 pt-2">

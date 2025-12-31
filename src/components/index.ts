@@ -1,6 +1,8 @@
 export { Clock } from './Clock';
 export { SearchBox } from './SearchBox';
 export { BookmarkGrid } from './BookmarkGrid';
+export { BookmarkPanel } from './BookmarkPanel';
+export { BookmarkPanelButton } from './BookmarkPanelButton';
 export { SettingsButton } from './SettingsButton';
 export { Background } from './Background';
 export { CustomCss } from './CustomCss';
