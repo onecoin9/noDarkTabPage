@@ -14,14 +14,7 @@ const gradients = [
   { name: '暗夜紫', value: 'linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%)' },
 ];
 
-const unsplashCategories = [
-  { name: '随机', value: '' },
-  { name: '自然', value: 'nature' },
-  { name: '城市', value: 'city' },
-  { name: '科技', value: 'technology' },
-  { name: '极简', value: 'minimal' },
-  { name: '太空', value: 'space' },
-];
+// 使用 picsum.photos 作为随机壁纸源
 
 // Supabase Edge Function URL for Wallhaven proxy
 const WALLHAVEN_PROXY_URL = 'https://gbfdfpxlltnvnrsayrou.supabase.co/functions/v1/wallhaven';
@@ -70,18 +63,6 @@ export function WallpaperSettings() {
     });
   };
 
-  const setUnsplashCategory = (category: string) => {
-    const timestamp = Date.now(); // 添加时间戳避免缓存
-    updateSettings({
-      background: { 
-        ...settings.background, 
-        type: 'unsplash', 
-        unsplashCategory: category,
-        value: `https://source.unsplash.com/random/1920x1080${category ? `?${category}` : ''}?t=${timestamp}`,
-      },
-    });
-  };
-
   const setCustomUrl = (url: string) => {
     updateSettings({
       background: { ...settings.background, type: 'custom', value: url },
@@ -123,12 +104,11 @@ export function WallpaperSettings() {
   };
 
   const refreshUnsplash = () => {
-    const category = settings.background.unsplashCategory || '';
     const timestamp = Date.now();
     updateSettings({
       background: { 
         ...settings.background, 
-        value: `https://source.unsplash.com/random/1920x1080${category ? `?${category}` : ''}?t=${timestamp}`,
+        value: `https://picsum.photos/1920/1080?random=${timestamp}`,
       },
     });
   };
@@ -246,22 +226,8 @@ export function WallpaperSettings() {
 
       {settings.background.type === 'unsplash' && (
         <section>
-          <h3 className="text-lg font-medium text-white mb-4">Unsplash 壁纸</h3>
-          <div className="grid grid-cols-3 md:grid-cols-6 gap-3 mb-4">
-            {unsplashCategories.map((cat) => (
-              <button
-                key={cat.value}
-                onClick={() => setUnsplashCategory(cat.value)}
-                className={`p-3 rounded-xl border transition-all ${
-                  settings.background.unsplashCategory === cat.value
-                    ? 'border-indigo-500 bg-indigo-500/20 text-white'
-                    : 'border-slate-600 bg-slate-800/50 text-slate-300 hover:border-slate-500'
-                }`}
-              >
-                {cat.name}
-              </button>
-            ))}
-          </div>
+          <h3 className="text-lg font-medium text-white mb-4">随机壁纸</h3>
+          <p className="text-slate-400 text-sm mb-4">使用 Picsum 提供的高质量随机图片</p>
           <button
             onClick={refreshUnsplash}
             className="flex items-center justify-center gap-2 w-full p-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl transition-colors"
