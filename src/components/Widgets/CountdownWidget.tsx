@@ -1,15 +1,17 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useAppStore } from '../../stores/useAppStore';
+import { EditableWidget } from '../EditableWidget';
 
-interface CountdownProps {
-  targetDate?: string;
-  title?: string;
-}
-
-export function CountdownWidget({ targetDate, title = '倒计时' }: CountdownProps) {
-  const [target, setTarget] = useState(targetDate || '');
+export function CountdownWidget() {
+  const settings = useAppStore((s) => s.settings);
+  const updateSettings = useAppStore((s) => s.updateSettings);
+  const position = settings.countdownPosition || { preset: 'center-left', offsetX: 0, offsetY: 100 };
+  const size = settings.countdownSize || 240;
+  
+  const [target, setTarget] = useState('');
   const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-  const [isEditing, setIsEditing] = useState(!targetDate);
+  const [isEditing, setIsEditing] = useState(true);
 
   useEffect(() => {
     if (!target) return;
@@ -35,42 +37,56 @@ export function CountdownWidget({ targetDate, title = '倒计时' }: CountdownPr
     return () => clearInterval(interval);
   }, [target]);
 
-  if (isEditing) {
-    return (
-      <div className="space-y-3">
-        <input
-          type="datetime-local"
-          value={target}
-          onChange={(e) => setTarget(e.target.value)}
-          className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm focus:outline-none"
-        />
-        <button
-          onClick={() => target && setIsEditing(false)}
-          disabled={!target}
-          className="w-full py-2 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 text-white text-sm rounded-lg transition-colors"
-        >
-          开始倒计时
-        </button>
-      </div>
-    );
-  }
+  const content = (
+    <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20" style={{ width: `${size}px` }}>
+      {isEditing ? (
+        <div className="space-y-3">
+          <input
+            type="datetime-local"
+            value={target}
+            onChange={(e) => setTarget(e.target.value)}
+            className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-sm focus:outline-none"
+          />
+          <button
+            onClick={() => target && setIsEditing(false)}
+            disabled={!target}
+            className="w-full py-2 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 text-white text-sm rounded-lg transition-colors"
+          >
+            开始倒计时
+          </button>
+        </div>
+      ) : (
+        <div className="text-center">
+          <div className="text-white/60 text-xs mb-2">倒计时</div>
+          <div className="grid grid-cols-4 gap-2">
+            <TimeBlock value={countdown.days} label="天" />
+            <TimeBlock value={countdown.hours} label="时" />
+            <TimeBlock value={countdown.minutes} label="分" />
+            <TimeBlock value={countdown.seconds} label="秒" />
+          </div>
+          <button
+            onClick={() => setIsEditing(true)}
+            className="mt-3 text-xs text-white/40 hover:text-white/60"
+          >
+            修改时间
+          </button>
+        </div>
+      )}
+    </div>
+  );
 
   return (
-    <div className="text-center">
-      <div className="text-white/60 text-xs mb-2">{title}</div>
-      <div className="grid grid-cols-4 gap-2">
-        <TimeBlock value={countdown.days} label="天" />
-        <TimeBlock value={countdown.hours} label="时" />
-        <TimeBlock value={countdown.minutes} label="分" />
-        <TimeBlock value={countdown.seconds} label="秒" />
-      </div>
-      <button
-        onClick={() => setIsEditing(true)}
-        className="mt-3 text-xs text-white/40 hover:text-white/60"
-      >
-        修改时间
-      </button>
-    </div>
+    <EditableWidget
+      name="倒计时"
+      position={position}
+      onPositionChange={(pos) => updateSettings({ countdownPosition: pos })}
+      size={size}
+      minSize={200}
+      maxSize={400}
+      onSizeChange={(size) => updateSettings({ countdownSize: size })}
+    >
+      {content}
+    </EditableWidget>
   );
 }
 

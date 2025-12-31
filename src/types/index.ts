@@ -147,6 +147,9 @@ export interface AppSettings {
   pomodoroPosition: ComponentPosition;
   todoPosition: ComponentPosition;
   quotePosition: ComponentPosition;
+  countdownPosition: ComponentPosition;
+  notePosition: ComponentPosition;
+  calendarPosition: ComponentPosition;
   
   // 小组件大小 (像素 px)
   weatherSize: number;
@@ -154,6 +157,10 @@ export interface AppSettings {
   todoWidth: number;
   todoHeight: number;
   quoteSize: number;
+  countdownSize: number;
+  noteWidth: number;
+  noteHeight: number;
+  calendarSize: number;
   
   // 天气
   weatherCity: string;

@@ -41,9 +41,31 @@ export function WidgetsSettings() {
       positionKey: 'quotePosition',
       sizeKey: 'quoteSize',
     },
-    { key: 'showCountdown', label: '倒计时', icon: '⏰', description: '重要日期倒计时' },
-    { key: 'showNote', label: '便签', icon: '📝', description: '快速记录笔记' },
-    { key: 'showCalendar', label: '日历', icon: '📅', description: '查看日期' },
+    { 
+      key: 'showCountdown', 
+      label: '倒计时', 
+      icon: '⏰', 
+      description: '重要日期倒计时',
+      positionKey: 'countdownPosition',
+      sizeKey: 'countdownSize',
+    },
+    { 
+      key: 'showNote', 
+      label: '便签', 
+      icon: '📝', 
+      description: '快速记录笔记',
+      positionKey: 'notePosition',
+      widthKey: 'noteWidth',
+      heightKey: 'noteHeight',
+    },
+    { 
+      key: 'showCalendar', 
+      label: '日历', 
+      icon: '📅', 
+      description: '查看日期',
+      positionKey: 'calendarPosition',
+      sizeKey: 'calendarSize',
+    },
   ] as const;
 
   // 获取当前侧栏位置

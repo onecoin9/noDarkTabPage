@@ -12,6 +12,9 @@ import {
   Weather,
   DailyQuote,
 } from './components';
+import { CalendarWidget } from './components/Widgets/CalendarWidget';
+import { CountdownWidget } from './components/Widgets/CountdownWidget';
+import { NoteWidget } from './components/Widgets/NoteWidget';
 import { useAppStore } from './stores/useAppStore';
 import type { PositionPreset } from './types';
 
@@ -56,6 +59,9 @@ function App() {
       {settings.showWeather && <Weather />}
       {settings.showPomodoro && <Pomodoro />}
       {settings.showTodo && <TodoList />}
+      {settings.showCountdown && <CountdownWidget />}
+      {settings.showNote && <NoteWidget />}
+      {settings.showCalendar && <CalendarWidget />}
 
       {/* 书签区域 */}
       <div className={`fixed inset-0 flex p-8 md:p-16 z-10 pointer-events-none ${getPositionClasses(bookmarkPosition)}`}>

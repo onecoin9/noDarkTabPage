@@ -66,11 +66,18 @@ const defaultSettings: AppSettings = {
   pomodoroPosition: { preset: 'center-left', offsetX: 0, offsetY: 100 },
   todoPosition: { preset: 'center-right', offsetX: 0, offsetY: 0 },
   quotePosition: { preset: 'center', offsetX: 0, offsetY: 60 },
+  countdownPosition: { preset: 'center-left', offsetX: 0, offsetY: 100 },
+  notePosition: { preset: 'bottom-right', offsetX: 0, offsetY: 0 },
+  calendarPosition: { preset: 'center-right', offsetX: 0, offsetY: 100 },
   weatherSize: 200,
   pomodoroSize: 200,
   todoWidth: 280,
   todoHeight: 320,
   quoteSize: 100,
+  countdownSize: 240,
+  noteWidth: 280,
+  noteHeight: 200,
+  calendarSize: 240,
   weatherCity: '北京',
   weatherUnit: 'celsius',
 };
@@ -279,9 +286,21 @@ export const useAppStore = create<AppState>()(
       importConfig: (json) => {
         try {
           const config = JSON.parse(json);
+          const currentState = get();
+          
+          // 深度合并设置，保留所有字段
+          if (config.settings) {
+            set({ 
+              settings: {
+                ...currentState.settings,
+                ...config.settings,
+              }
+            });
+          }
+          
           if (config.bookmarks) set({ bookmarks: config.bookmarks });
-          if (config.settings) set({ settings: { ...defaultSettings, ...config.settings } });
           if (config.todos) set({ todos: config.todos });
+          
           return true;
         } catch {
           return false;

@@ -120,6 +120,13 @@ export function useCloudSync() {
         };
         importConfig(JSON.stringify(config));
         setLastSynced(data.updated_at);
+        
+        // 自动刷新页面以应用所有设置
+        setSyncStatus('success');
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+        return;
       }
 
       setSyncStatus('success');

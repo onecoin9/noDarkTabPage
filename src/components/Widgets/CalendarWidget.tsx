@@ -1,9 +1,16 @@
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useAppStore } from '../../stores/useAppStore';
+import { EditableWidget } from '../EditableWidget';
 
 export function CalendarWidget() {
+  const settings = useAppStore((s) => s.settings);
+  const updateSettings = useAppStore((s) => s.updateSettings);
   const [currentDate, setCurrentDate] = useState(new Date());
   const today = new Date();
+  
+  const position = settings.calendarPosition || { preset: 'center-right', offsetX: 0, offsetY: 100 };
+  const size = settings.calendarSize || 240;
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -41,14 +48,14 @@ export function CalendarWidget() {
   const monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', 
                       '七月', '八月', '九月', '十月', '十一月', '十二月'];
 
-  return (
-    <div>
+  const content = (
+    <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20" style={{ width: `${size}px` }}>
       {/* 头部 */}
       <div className="flex items-center justify-between mb-3">
         <button onClick={prevMonth} className="p-1 hover:bg-white/10 rounded">
           <ChevronLeft size={16} className="text-white/60" />
         </button>
-        <span className="text-white font-medium">
+        <span className="text-white font-medium text-sm">
           {year}年 {monthNames[month]}
         </span>
         <button onClick={nextMonth} className="p-1 hover:bg-white/10 rounded">
@@ -70,5 +77,19 @@ export function CalendarWidget() {
         {days}
       </div>
     </div>
+  );
+
+  return (
+    <EditableWidget
+      name="日历"
+      position={position}
+      onPositionChange={(pos) => updateSettings({ calendarPosition: pos })}
+      size={size}
+      minSize={200}
+      maxSize={400}
+      onSizeChange={(size) => updateSettings({ calendarSize: size })}
+    >
+      {content}
+    </EditableWidget>
   );
 }
