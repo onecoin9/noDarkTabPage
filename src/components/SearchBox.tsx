@@ -1,8 +1,79 @@
-import { useState, useRef, useEffect, type KeyboardEvent } from 'react';
+import { useState, useRef, useEffect, useCallback, type KeyboardEvent } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, ChevronDown } from 'lucide-react';
 import { useAppStore } from '../stores/useAppStore';
 import type { SearchEngine } from '../types';
+
+// 星星粒子组件
+interface Particle {
+  id: number;
+  x: number;
+  y: number;
+  size: number;
+  color: string;
+  delay: number;
+}
+
+function SparkleEffect({ show, onComplete }: { show: boolean; onComplete: () => void }) {
+  const [particles, setParticles] = useState<Particle[]>([]);
+  
+  useEffect(() => {
+    if (show) {
+      const colors = ['#ffd700', '#ff6b6b', '#4ecdc4', '#a855f7', '#3b82f6', '#f97316'];
+      const newParticles: Particle[] = [];
+      for (let i = 0; i < 12; i++) {
+        newParticles.push({
+          id: i,
+          x: Math.random() * 60 - 30,
+          y: Math.random() * 60 - 30,
+          size: Math.random() * 6 + 4,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          delay: Math.random() * 0.2,
+        });
+      }
+      setParticles(newParticles);
+      
+      const timer = setTimeout(() => {
+        setParticles([]);
+        onComplete();
+      }, 600);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [show, onComplete]);
+  
+  if (!show || particles.length === 0) return null;
+  
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-visible">
+      {particles.map((p) => (
+        <motion.div
+          key={p.id}
+          initial={{ opacity: 1, scale: 0, x: 0, y: 0 }}
+          animate={{ 
+            opacity: 0, 
+            scale: 1, 
+            x: p.x, 
+            y: p.y,
+          }}
+          transition={{ 
+            duration: 0.5, 
+            delay: p.delay,
+            ease: 'easeOut',
+          }}
+          className="absolute left-1/2 top-1/2"
+          style={{ 
+            width: p.size, 
+            height: p.size, 
+            backgroundColor: p.color,
+            borderRadius: '50%',
+            boxShadow: `0 0 ${p.size}px ${p.color}`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
 
 const searchUrls: Record<SearchEngine, string> = {
   google: 'https://www.google.com/search?q=',
@@ -43,9 +114,12 @@ export function SearchBox() {
   const [isHovered, setIsHovered] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [showSparkle, setShowSparkle] = useState(false);
   const settings = useAppStore((s) => s.settings);
   const setSearchEngine = useAppStore((s) => s.setSearchEngine);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const selectorRef = useRef<HTMLButtonElement>(null);
+  const [selectorWidth, setSelectorWidth] = useState(0);
 
   // 点击外部关闭下拉菜单
   useEffect(() => {
@@ -56,6 +130,17 @@ export function SearchBox() {
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // 测量选择器宽度
+  useEffect(() => {
+    if (selectorRef.current) {
+      setSelectorWidth(selectorRef.current.offsetWidth);
+    }
+  }, [settings.searchEngine]);
+
+  const handleSparkleComplete = useCallback(() => {
+    setShowSparkle(false);
   }, []);
 
   const handleSearch = () => {
@@ -69,6 +154,9 @@ export function SearchBox() {
   };
 
   const handleSelectEngine = (engine: SearchEngine) => {
+    if (engine !== settings.searchEngine) {
+      setShowSparkle(true);
+    }
     setSearchEngine(engine);
     setDropdownOpen(false);
   };
@@ -106,11 +194,16 @@ export function SearchBox() {
         {/* 自定义搜索引擎选择器 */}
         <div className="relative" ref={dropdownRef}>
           <button
+            ref={selectorRef}
             onClick={() => setDropdownOpen(!dropdownOpen)}
-            className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-black/10 transition-colors"
+            className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-black/10 transition-colors relative"
             style={{ color: textColor }}
           >
-            <img 
+            <motion.img 
+              key={settings.searchEngine}
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.2 }}
               src={engineIcons[settings.searchEngine]} 
               alt={engineNames[settings.searchEngine]}
               className="w-5 h-5"
@@ -118,29 +211,44 @@ export function SearchBox() {
                 (e.target as HTMLImageElement).style.display = 'none';
               }}
             />
-            <span className="text-sm font-medium">{engineNames[settings.searchEngine]}</span>
+            <motion.span 
+              key={`name-${settings.searchEngine}`}
+              initial={{ y: -10, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.2 }}
+              className="text-sm font-medium"
+            >
+              {engineNames[settings.searchEngine]}
+            </motion.span>
             <ChevronDown size={16} className={`transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
+            
+            {/* 星星动画效果 */}
+            <SparkleEffect show={showSparkle} onComplete={handleSparkleComplete} />
           </button>
 
-          {/* 下拉菜单 */}
+          {/* 下拉菜单 - 宽度与选择器对齐 */}
           <AnimatePresence>
             {dropdownOpen && (
               <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
+                initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -10, scale: 0.95 }}
                 transition={{ duration: 0.15 }}
                 className="absolute top-full left-0 mt-2 py-1 rounded-xl shadow-xl overflow-hidden z-50"
                 style={{
                   backgroundColor: bgColor,
-                  minWidth: '140px',
+                  width: selectorWidth > 0 ? `${selectorWidth}px` : 'auto',
+                  minWidth: '100px',
                 }}
               >
-                {engines.map((engine) => (
-                  <button
+                {engines.map((engine, index) => (
+                  <motion.button
                     key={engine}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.03 }}
                     onClick={() => handleSelectEngine(engine)}
-                    className={`w-full flex items-center gap-3 px-3 py-2 text-left transition-colors ${
+                    className={`w-full flex items-center gap-2 px-3 py-2 text-left transition-colors ${
                       settings.searchEngine === engine 
                         ? isLight ? 'bg-black/10' : 'bg-white/10'
                         : isLight ? 'hover:bg-black/5' : 'hover:bg-white/5'
@@ -150,13 +258,13 @@ export function SearchBox() {
                     <img 
                       src={engineIcons[engine]} 
                       alt={engineNames[engine]}
-                      className="w-5 h-5"
+                      className="w-4 h-4"
                       onError={(e) => {
                         (e.target as HTMLImageElement).style.display = 'none';
                       }}
                     />
-                    <span className="text-sm">{engineNames[engine]}</span>
-                  </button>
+                    <span className="text-sm truncate">{engineNames[engine]}</span>
+                  </motion.button>
                 ))}
               </motion.div>
             )}
@@ -172,7 +280,7 @@ export function SearchBox() {
           onKeyDown={handleKeyDown}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          placeholder="搜索互联网..."
+          placeholder="探索世界ing"
           className="flex-1 bg-transparent text-base outline-none px-2 py-2 placeholder:opacity-50"
           style={{ color: textColor }}
         />
