@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Cloud, Upload, Download, LogOut, Loader2, Check, AlertCircle } from 'lucide-react';
+import { Cloud, Upload, Download, LogOut, Loader2, Check, AlertCircle, X } from 'lucide-react';
 import { useCloudSync } from '../../hooks/useCloudSync';
 
 export function CloudSyncSettings() {
@@ -20,6 +20,10 @@ export function CloudSyncSettings() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
+  const [debugData, setDebugData] = useState<string | null>(null);
+  const [showDebug, setShowDebug] = useState(false);
+  const [localData, setLocalData] = useState<string | null>(null);
+  const [showLocal, setShowLocal] = useState(false);
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,6 +36,48 @@ export function CloudSyncSettings() {
 
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleString('zh-CN');
+  };
+
+  // 查看本地数据
+  const viewLocalData = () => {
+    try {
+      const { useAppStore } = require('../../stores/useAppStore');
+      const state = useAppStore.getState();
+      const localState = {
+        bookmarks: state.bookmarks,
+        settings: state.settings,
+        todos: state.todos,
+      };
+      setLocalData(JSON.stringify(localState, null, 2));
+      setShowLocal(true);
+    } catch (err) {
+      console.error('获取本地数据失败:', err);
+      setLocalData(`错误: ${err instanceof Error ? err.message : '未知错误'}`);
+      setShowLocal(true);
+    }
+  };
+
+  // 查看云端数据
+  const viewCloudData = async () => {
+    if (!user) return;
+    
+    try {
+      const { supabase } = await import('../../lib/supabase');
+      const { data, error } = await supabase
+        .from('user_settings')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (error) throw error;
+      
+      setDebugData(JSON.stringify(data, null, 2));
+      setShowDebug(true);
+    } catch (err) {
+      console.error('获取云端数据失败:', err);
+      setDebugData(`错误: ${err instanceof Error ? err.message : '未知错误'}`);
+      setShowDebug(true);
+    }
   };
 
   return (
@@ -193,6 +239,58 @@ export function CloudSyncSettings() {
             <p className="text-slate-500 text-xs">
               提示：上传会覆盖云端数据，下载会覆盖本地数据。
             </p>
+
+            {/* 调试按钮 */}
+            <div className="pt-4 border-t border-slate-700 space-y-2">
+              <button
+                onClick={viewLocalData}
+                className="w-full p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-sm transition-colors"
+              >
+                📱 查看本地数据（调试）
+              </button>
+              <button
+                onClick={viewCloudData}
+                className="w-full p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-sm transition-colors"
+              >
+                ☁️ 查看云端数据（调试）
+              </button>
+            </div>
+
+            {/* 本地数据显示 */}
+            {showLocal && localData && (
+              <div className="mt-4 p-4 bg-slate-800 rounded-xl border border-slate-600 max-h-96 overflow-y-auto">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="text-white font-medium text-sm">本地数据</h4>
+                  <button
+                    onClick={() => setShowLocal(false)}
+                    className="text-slate-400 hover:text-white"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+                <pre className="text-xs text-slate-300 whitespace-pre-wrap break-all">
+                  {localData}
+                </pre>
+              </div>
+            )}
+
+            {/* 调试数据显示 */}
+            {showDebug && debugData && (
+              <div className="mt-4 p-4 bg-slate-800 rounded-xl border border-slate-600 max-h-96 overflow-y-auto">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="text-white font-medium text-sm">云端数据</h4>
+                  <button
+                    onClick={() => setShowDebug(false)}
+                    className="text-slate-400 hover:text-white"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+                <pre className="text-xs text-slate-300 whitespace-pre-wrap break-all">
+                  {debugData}
+                </pre>
+              </div>
+            )}
           </div>
         )}
       </section>
