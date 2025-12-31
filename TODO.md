@@ -101,7 +101,7 @@
 
 - [x] 云端同步 (Supabase)
 - [x] 用户登录/注册
-- [ ] Google 账号登录 (待配置 OAuth)
+- [x] Google 账号登录
 - [x] GitHub 账号登录
 - [x] 多设备同步
 
