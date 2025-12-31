@@ -1,6 +1,6 @@
 import { useAppStore } from '../../stores/useAppStore';
-import type { SearchEngine, BookmarkDisplayMode } from '../../types';
-import { Search, Grid3X3 } from 'lucide-react';
+import type { SearchEngine, BookmarkDisplayMode, BookmarkPosition } from '../../types';
+import { Search, Grid3X3, ArrowUpLeft, ArrowUp, ArrowUpRight, ArrowLeft, Move, ArrowRight, ArrowDownLeft, ArrowDown, ArrowDownRight } from 'lucide-react';
 
 const colorPresets = [
   '#000000', '#ffffff', '#dc2626', '#f97316', '#3b82f6', '#22c55e', '#8b5cf6', '#ec4899'
@@ -142,6 +142,14 @@ export function AppearanceSettings() {
       </section>
 
       <section>
+        <h3 className="text-lg font-medium text-white mb-4">书签位置</h3>
+        <PositionSelector
+          value={settings.bookmarkPosition || 'center'}
+          onChange={(pos) => updateSettings({ bookmarkPosition: pos })}
+        />
+      </section>
+
+      <section>
         <h3 className="text-lg font-medium text-white mb-4">显示选项</h3>
         <div className="space-y-3">
           <ToggleOption
@@ -195,5 +203,44 @@ function ToggleOption({
         />
       </button>
     </label>
+  );
+}
+
+// 位置选择器组件 - 9宫格
+function PositionSelector({
+  value,
+  onChange,
+}: {
+  value: BookmarkPosition;
+  onChange: (pos: BookmarkPosition) => void;
+}) {
+  const positions: { pos: BookmarkPosition; icon: React.ReactNode }[] = [
+    { pos: 'top-left', icon: <ArrowUpLeft size={16} /> },
+    { pos: 'top-center', icon: <ArrowUp size={16} /> },
+    { pos: 'top-right', icon: <ArrowUpRight size={16} /> },
+    { pos: 'center-left', icon: <ArrowLeft size={16} /> },
+    { pos: 'center', icon: <Move size={16} /> },
+    { pos: 'center-right', icon: <ArrowRight size={16} /> },
+    { pos: 'bottom-left', icon: <ArrowDownLeft size={16} /> },
+    { pos: 'bottom-center', icon: <ArrowDown size={16} /> },
+    { pos: 'bottom-right', icon: <ArrowDownRight size={16} /> },
+  ];
+
+  return (
+    <div className="grid grid-cols-3 gap-2 w-fit">
+      {positions.map(({ pos, icon }) => (
+        <button
+          key={pos}
+          onClick={() => onChange(pos)}
+          className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${
+            value === pos
+              ? 'bg-indigo-500 text-white shadow-lg scale-105'
+              : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-300'
+          }`}
+        >
+          {icon}
+        </button>
+      ))}
+    </div>
   );
 }

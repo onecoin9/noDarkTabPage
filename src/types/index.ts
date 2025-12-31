@@ -25,6 +25,12 @@ export type SearchEngine = 'google' | 'baidu' | 'bing' | 'duckduckgo';
 // 书签显示模式
 export type BookmarkDisplayMode = 'grid' | 'list' | 'icon';
 
+// 书签位置
+export type BookmarkPosition = 
+  | 'top-left' | 'top-center' | 'top-right'
+  | 'center-left' | 'center' | 'center-right'
+  | 'bottom-left' | 'bottom-center' | 'bottom-right';
+
 // 时间格式
 export type TimeFormat = '12h' | '24h';
 
@@ -90,6 +96,7 @@ export interface AppSettings {
   
   // 书签
   bookmarkDisplayMode: BookmarkDisplayMode;
+  bookmarkPosition: BookmarkPosition;
   showBookmarkTitle: boolean;
   
   // 功能开关

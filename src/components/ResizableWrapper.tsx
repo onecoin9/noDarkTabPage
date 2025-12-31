@@ -8,9 +8,10 @@ interface ResizableWrapperProps {
   min: number;
   max: number;
   onChange: (value: number) => void;
-  sensitivity?: number; // 拖拽灵敏度
+  sensitivity?: number;
   label?: string;
   className?: string;
+  horizontal?: boolean; // 是否是横向布局
 }
 
 export function ResizableWrapper({
@@ -22,6 +23,7 @@ export function ResizableWrapper({
   sensitivity = 0.5,
   label = 'px',
   className = '',
+  horizontal = true,
 }: ResizableWrapperProps) {
   const { isEditMode } = useEditMode();
   const [isResizing, setIsResizing] = useState(false);
@@ -64,39 +66,36 @@ export function ResizableWrapper({
 
   return (
     <div ref={containerRef} className={`relative group ${className}`}>
-      {/* 编辑模式虚线边框 */}
-      <div className="absolute -inset-3 border-2 border-dashed border-indigo-500/40 rounded-xl pointer-events-none group-hover:border-indigo-500/70 transition-colors" />
+      {/* 编辑模式虚线边框 - 横向长条形 */}
+      <div 
+        className="absolute border-2 border-dashed border-indigo-500/40 rounded-xl pointer-events-none group-hover:border-indigo-500/70 transition-colors"
+        style={{
+          top: '-8px',
+          bottom: '-8px',
+          left: horizontal ? '-16px' : '-8px',
+          right: horizontal ? '-16px' : '-8px',
+        }}
+      />
       
-      {/* 四个角的装饰 */}
-      <div className="absolute -top-3 -left-3 w-2 h-2 border-t-2 border-l-2 border-indigo-500 rounded-tl" />
-      <div className="absolute -top-3 -right-3 w-2 h-2 border-t-2 border-r-2 border-indigo-500 rounded-tr" />
-      <div className="absolute -bottom-3 -left-3 w-2 h-2 border-b-2 border-l-2 border-indigo-500 rounded-bl" />
-      <div className="absolute -bottom-3 -right-3 w-2 h-2 border-b-2 border-r-2 border-indigo-500 rounded-br" />
+      {/* 左右两端的装饰线 */}
+      {horizontal && (
+        <>
+          <div className="absolute top-1/2 -translate-y-1/2 -left-4 w-2 h-8 border-l-2 border-t-2 border-b-2 border-indigo-500 rounded-l-lg" />
+          <div className="absolute top-1/2 -translate-y-1/2 -right-4 w-2 h-8 border-r-2 border-t-2 border-b-2 border-indigo-500 rounded-r-lg" />
+        </>
+      )}
       
       {children}
       
-      {/* 右下角调整大小手柄 */}
-      <motion.div
-        onMouseDown={handleResizeStart}
-        whileHover={{ scale: 1.2 }}
-        className="absolute -bottom-3 -right-3 w-5 h-5 cursor-se-resize flex items-center justify-center z-10"
-      >
-        <svg 
-          viewBox="0 0 10 10" 
-          className={`w-3 h-3 transition-colors ${isResizing ? 'text-indigo-300' : 'text-indigo-500 hover:text-indigo-400'}`}
-          fill="currentColor"
-        >
-          <path d="M9 9H7V7H9V9ZM9 5H7V3H9V5ZM5 9H3V7H5V9ZM9 1H7V0H9V1ZM5 5H3V3H5V5ZM1 9H0V7H1V9Z" />
-        </svg>
-      </motion.div>
-      
-      {/* 底部中间调整手柄 */}
+      {/* 底部中间调整手柄 - 主要的调整方式 */}
       <motion.div
         onMouseDown={handleResizeStart}
         whileHover={{ scale: 1.1 }}
-        className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-8 h-3 cursor-s-resize flex items-center justify-center z-10 opacity-0 group-hover:opacity-100 transition-opacity"
+        className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-4 py-1 cursor-s-resize flex items-center justify-center z-10 group/handle"
       >
-        <div className={`w-6 h-1 rounded-full transition-colors ${isResizing ? 'bg-indigo-300' : 'bg-indigo-500/50 hover:bg-indigo-400'}`} />
+        <div className={`w-10 h-1.5 rounded-full transition-colors ${
+          isResizing ? 'bg-indigo-400' : 'bg-indigo-500/60 group-hover/handle:bg-indigo-400'
+        }`} />
       </motion.div>
       
       {/* 大小提示气泡 */}

@@ -43,6 +43,7 @@ const defaultSettings: AppSettings = {
   showSeconds: false,
   showDate: true,
   bookmarkDisplayMode: 'grid',
+  bookmarkPosition: 'center',
   showBookmarkTitle: true,
   showWeather: true,
   showQuote: true,
