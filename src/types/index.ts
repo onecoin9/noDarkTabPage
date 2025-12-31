@@ -172,6 +172,9 @@ export interface AppSettings {
   webdavPassword?: string;
   webdavUseCorsProxy?: boolean;
   webdavCorsProxyUrl?: string;
+  
+  // 云端书签 XBEL
+  cloudBookmarksXBEL?: string;
 }
 
 // 设置页面标签

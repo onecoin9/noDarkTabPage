@@ -79,6 +79,16 @@ export function BookmarkPanel({ isOpen, onClose }: BookmarkPanelProps) {
   const [error, setError] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [uploadedXBEL, setUploadedXBEL] = useState<string | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // 检查登录状态
+  useEffect(() => {
+    import('../lib/supabase').then(({ supabase }) => {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        setIsLoggedIn(!!session);
+      });
+    });
+  }, []);
 
   useEffect(() => {
     // 检查是否在扩展环境中
@@ -97,6 +107,10 @@ export function BookmarkPanel({ isOpen, onClose }: BookmarkPanelProps) {
       } else if (mode === 'webdav') {
         if (uploadedXBEL) {
           loadFromXBELText(uploadedXBEL);
+        } else if (settings.cloudBookmarksXBEL) {
+          // 优先加载云端保存的 XBEL
+          setUploadedXBEL(settings.cloudBookmarksXBEL);
+          loadFromXBELText(settings.cloudBookmarksXBEL);
         } else if (settings.webdavUrl) {
           loadWebDAVBookmarks();
         }
@@ -189,8 +203,24 @@ export function BookmarkPanel({ isOpen, onClose }: BookmarkPanelProps) {
       const text = event.target?.result as string;
       setUploadedXBEL(text);
       loadFromXBELText(text);
+      
+      // 保存到设置中，以便云同步
+      updateSettings({ cloudBookmarksXBEL: text });
     };
     reader.readAsText(file);
+  };
+
+  const uploadXBELToCloud = () => {
+    if (!uploadedXBEL) return;
+    updateSettings({ cloudBookmarksXBEL: uploadedXBEL });
+    alert('XBEL 文件已保存到本地设置，点击"上传到云端"按钮即可同步');
+  };
+
+  const loadFromCloud = () => {
+    if (settings.cloudBookmarksXBEL) {
+      setUploadedXBEL(settings.cloudBookmarksXBEL);
+      loadFromXBELText(settings.cloudBookmarksXBEL);
+    }
   };
 
   const toggleFolder = (id: string) => {
@@ -405,6 +435,29 @@ export function BookmarkPanel({ isOpen, onClose }: BookmarkPanelProps) {
                           />
                           <p className="text-slate-500 text-xs mt-1">从浏览器导出的 XBEL 格式书签文件</p>
                         </div>
+                        
+                        {uploadedXBEL && isLoggedIn && (
+                          <div className="flex gap-2">
+                            <button
+                              onClick={uploadXBELToCloud}
+                              className="flex-1 px-3 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-white text-xs transition-colors"
+                            >
+                              💾 保存到云端
+                            </button>
+                            <button
+                              onClick={loadFromCloud}
+                              className="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-white text-xs transition-colors"
+                            >
+                              ☁️ 从云端加载
+                            </button>
+                          </div>
+                        )}
+                        
+                        {uploadedXBEL && !isLoggedIn && (
+                          <div className="text-xs text-amber-400 bg-amber-500/10 p-2 rounded">
+                            💡 登录后可将书签同步到云端
+                          </div>
+                        )}
                         
                         <div className="border-t border-slate-600 pt-3">
                           <p className="text-slate-400 text-xs mb-2">或使用 WebDAV 同步</p>

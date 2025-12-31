@@ -85,6 +85,7 @@ const defaultSettings: AppSettings = {
   webdavPassword: '',
   webdavUseCorsProxy: false,
   webdavCorsProxyUrl: 'https://corsproxy.io/?',
+  cloudBookmarksXBEL: '',
 };
 
 // 默认番茄钟
