@@ -9,7 +9,6 @@ interface EditableWidgetProps {
   name: string;
   position: ComponentPosition;
   onPositionChange: (position: ComponentPosition) => void;
-  // 可选的大小调整
   size?: number;
   minSize?: number;
   maxSize?: number;
@@ -18,9 +17,12 @@ interface EditableWidgetProps {
 }
 
 // 位置预设到CSS的映射
+// 关键：右侧定位时，offsetX 为负值表示向右移动；底部定位时，offsetY 为负值表示向下移动
 function getPositionStyle(position: ComponentPosition): React.CSSProperties {
   const { preset, offsetX, offsetY } = position;
   
+  // 右侧定位时，translate 需要取反（正的 offsetX 应该向右移动，但 right 定位下 translate 正值是向右）
+  // 所以右侧定位时，我们直接使用 offsetX，但在拖拽时不取反
   const presetStyles: Record<PositionPreset, { top?: string; bottom?: string; left?: string; right?: string; transform: string }> = {
     'top-left': { top: '10%', left: '10%', transform: `translate(${offsetX}px, ${offsetY}px)` },
     'top-center': { top: '10%', left: '50%', transform: `translate(calc(-50% + ${offsetX}px), ${offsetY}px)` },
@@ -58,7 +60,6 @@ export function EditableWidget({
   const [startSize, setStartSize] = useState(size || 80);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // 拖拽移动
   const handleDragStart = (e: React.MouseEvent) => {
     e.preventDefault();
     setIsDragging(true);
@@ -66,7 +67,6 @@ export function EditableWidget({
     setStartOffset({ x: position.offsetX, y: position.offsetY });
   };
 
-  // 调整大小
   const handleResizeStart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -80,8 +80,10 @@ export function EditableWidget({
 
     const handleMouseMove = (e: MouseEvent) => {
       if (isDragging) {
+        // 直接使用鼠标移动的差值，CSS 层面已经处理了方向
         const deltaX = e.clientX - dragStart.x;
         const deltaY = e.clientY - dragStart.y;
+        
         onPositionChange({
           ...position,
           offsetX: startOffset.x + deltaX,
@@ -124,7 +126,7 @@ export function EditableWidget({
       style={positionStyle}
       className={`z-10 group ${className}`}
     >
-      {/* 编辑模式工具栏 - 更简洁的设计 */}
+      {/* 编辑模式工具栏 */}
       <motion.div
         initial={{ opacity: 0, y: 5 }}
         animate={{ opacity: 1, y: 0 }}
@@ -145,7 +147,7 @@ export function EditableWidget({
 
       {children}
 
-      {/* 调整大小手柄 - 右下角 */}
+      {/* 调整大小手柄 */}
       {onSizeChange && (
         <motion.div
           onMouseDown={handleResizeStart}
@@ -154,7 +156,7 @@ export function EditableWidget({
         />
       )}
 
-      {/* 大小/位置提示 */}
+      {/* 位置提示 */}
       {(isDragging || isResizing) && (
         <motion.div
           initial={{ opacity: 0 }}
