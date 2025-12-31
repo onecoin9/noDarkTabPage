@@ -170,6 +170,8 @@ export interface AppSettings {
   webdavUrl?: string;
   webdavUsername?: string;
   webdavPassword?: string;
+  webdavUseCorsProxy?: boolean;
+  webdavCorsProxyUrl?: string;
 }
 
 // 设置页面标签

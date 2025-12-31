@@ -147,17 +147,23 @@ export function BookmarkPanel({ isOpen, onClose }: BookmarkPanelProps) {
       setLoading(true);
       setError(null);
       
+      // 构建请求 URL
+      let fetchUrl = settings.webdavUrl;
+      if (settings.webdavUseCorsProxy && settings.webdavCorsProxyUrl) {
+        fetchUrl = settings.webdavCorsProxyUrl + encodeURIComponent(settings.webdavUrl);
+      }
+      
       const headers: HeadersInit = {
         'Accept': 'application/xml, text/xml',
       };
       
-      // 如果有认证信息
-      if (settings.webdavUsername && settings.webdavPassword) {
+      // 如果有认证信息且不使用代理（代理会处理认证）
+      if (!settings.webdavUseCorsProxy && settings.webdavUsername && settings.webdavPassword) {
         const auth = btoa(`${settings.webdavUsername}:${settings.webdavPassword}`);
         headers['Authorization'] = `Basic ${auth}`;
       }
       
-      const response = await fetch(settings.webdavUrl, { headers });
+      const response = await fetch(fetchUrl, { headers });
       
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -166,7 +172,8 @@ export function BookmarkPanel({ isOpen, onClose }: BookmarkPanelProps) {
       const xmlText = await response.text();
       loadFromXBELText(xmlText);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '加载书签失败');
+      const errorMsg = err instanceof Error ? err.message : '加载书签失败';
+      setError(errorMsg + (errorMsg.includes('NetworkError') ? ' (CORS 跨域问题，请启用代理)' : ''));
       console.error('加载 WebDAV 书签失败:', err);
     } finally {
       setLoading(false);
@@ -413,6 +420,35 @@ export function BookmarkPanel({ isOpen, onClose }: BookmarkPanelProps) {
                             className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-xs focus:outline-none focus:border-indigo-500"
                           />
                         </div>
+                        
+                        <div>
+                          <label className="flex items-center gap-2 text-slate-400 text-xs cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={settings.webdavUseCorsProxy || false}
+                              onChange={(e) => updateSettings({ webdavUseCorsProxy: e.target.checked })}
+                              className="rounded"
+                            />
+                            <span>使用 CORS 代理（解决跨域问题）</span>
+                          </label>
+                        </div>
+                        
+                        {settings.webdavUseCorsProxy && (
+                          <div>
+                            <label className="text-slate-400 text-xs mb-1 block">CORS 代理地址</label>
+                            <input
+                              type="text"
+                              value={settings.webdavCorsProxyUrl || ''}
+                              onChange={(e) => updateSettings({ webdavCorsProxyUrl: e.target.value })}
+                              placeholder="https://corsproxy.io/?"
+                              className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-xs focus:outline-none focus:border-indigo-500"
+                            />
+                            <p className="text-slate-500 text-xs mt-1">
+                              推荐：corsproxy.io、cors-anywhere.herokuapp.com
+                            </p>
+                          </div>
+                        )}
+                        
                         <div>
                           <label className="text-slate-400 text-xs mb-1 block">用户名（可选）</label>
                           <input

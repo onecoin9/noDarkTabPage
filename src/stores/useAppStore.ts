@@ -83,6 +83,8 @@ const defaultSettings: AppSettings = {
   webdavUrl: '',
   webdavUsername: '',
   webdavPassword: '',
+  webdavUseCorsProxy: false,
+  webdavCorsProxyUrl: 'https://corsproxy.io/?',
 };
 
 // 默认番茄钟
