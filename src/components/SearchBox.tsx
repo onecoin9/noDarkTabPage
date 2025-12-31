@@ -1,6 +1,6 @@
-import { useState, type KeyboardEvent } from 'react';
-import { motion } from 'framer-motion';
-import { Search } from 'lucide-react';
+import { useState, useRef, useEffect, type KeyboardEvent } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Search, ChevronDown } from 'lucide-react';
 import { useAppStore } from '../stores/useAppStore';
 import type { SearchEngine } from '../types';
 
@@ -18,13 +18,15 @@ const engineNames: Record<SearchEngine, string> = {
   duckduckgo: 'DuckDuckGo',
 };
 
-// 搜索引擎图标
+// 搜索引擎图标 (使用更可靠的图标源)
 const engineIcons: Record<SearchEngine, string> = {
   google: 'https://www.google.com/favicon.ico',
   baidu: 'https://www.baidu.com/favicon.ico',
   bing: 'https://www.bing.com/favicon.ico',
   duckduckgo: 'https://duckduckgo.com/favicon.ico',
 };
+
+const engines: SearchEngine[] = ['google', 'baidu', 'bing', 'duckduckgo'];
 
 // 判断颜色是否为浅色
 const isLightColor = (color: string) => {
@@ -40,8 +42,21 @@ export function SearchBox() {
   const [query, setQuery] = useState('');
   const [isHovered, setIsHovered] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const settings = useAppStore((s) => s.settings);
   const setSearchEngine = useAppStore((s) => s.setSearchEngine);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // 点击外部关闭下拉菜单
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleSearch = () => {
     if (!query.trim()) return;
@@ -51,6 +66,11 @@ export function SearchBox() {
 
   const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === 'Enter') handleSearch();
+  };
+
+  const handleSelectEngine = (engine: SearchEngine) => {
+    setSearchEngine(engine);
+    setDropdownOpen(false);
   };
 
   // 计算样式
@@ -70,7 +90,7 @@ export function SearchBox() {
       className="w-full max-w-xl mx-auto"
     >
       <motion.div 
-        className="flex items-center backdrop-blur-sm px-5 py-2 shadow-lg cursor-text"
+        className="flex items-center backdrop-blur-sm px-4 py-2 shadow-lg cursor-text relative"
         style={{
           backgroundColor: `${bgColor}${Math.round(opacity * 255).toString(16).padStart(2, '0')}`,
           borderRadius: `${Math.min(radius, 9999)}px`,
@@ -83,23 +103,67 @@ export function SearchBox() {
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        <div className="flex items-center gap-2 pr-2 border-r border-current/20">
-          <img 
-            src={engineIcons[settings.searchEngine]} 
-            alt={engineNames[settings.searchEngine]}
-            className="w-4 h-4"
-          />
-          <select
-            value={settings.searchEngine}
-            onChange={(e) => setSearchEngine(e.target.value as SearchEngine)}
-            className="bg-transparent text-sm outline-none cursor-pointer"
+        {/* 自定义搜索引擎选择器 */}
+        <div className="relative" ref={dropdownRef}>
+          <button
+            onClick={() => setDropdownOpen(!dropdownOpen)}
+            className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-black/10 transition-colors"
             style={{ color: textColor }}
           >
-            {Object.entries(engineNames).map(([key, name]) => (
-              <option key={key} value={key} className="bg-slate-800 text-white">{name}</option>
-            ))}
-          </select>
+            <img 
+              src={engineIcons[settings.searchEngine]} 
+              alt={engineNames[settings.searchEngine]}
+              className="w-5 h-5"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = 'none';
+              }}
+            />
+            <span className="text-sm font-medium">{engineNames[settings.searchEngine]}</span>
+            <ChevronDown size={16} className={`transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
+          </button>
+
+          {/* 下拉菜单 */}
+          <AnimatePresence>
+            {dropdownOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.15 }}
+                className="absolute top-full left-0 mt-2 py-1 rounded-xl shadow-xl overflow-hidden z-50"
+                style={{
+                  backgroundColor: bgColor,
+                  minWidth: '140px',
+                }}
+              >
+                {engines.map((engine) => (
+                  <button
+                    key={engine}
+                    onClick={() => handleSelectEngine(engine)}
+                    className={`w-full flex items-center gap-3 px-3 py-2 text-left transition-colors ${
+                      settings.searchEngine === engine 
+                        ? isLight ? 'bg-black/10' : 'bg-white/10'
+                        : isLight ? 'hover:bg-black/5' : 'hover:bg-white/5'
+                    }`}
+                    style={{ color: textColor }}
+                  >
+                    <img 
+                      src={engineIcons[engine]} 
+                      alt={engineNames[engine]}
+                      className="w-5 h-5"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
+                    <span className="text-sm">{engineNames[engine]}</span>
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
+
+        <div className="w-px h-6 mx-2" style={{ backgroundColor: `${textColor}30` }} />
         
         <input
           type="text"
@@ -109,13 +173,13 @@ export function SearchBox() {
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           placeholder="搜索互联网..."
-          className="flex-1 bg-transparent text-base outline-none px-3 py-2 placeholder:opacity-60"
+          className="flex-1 bg-transparent text-base outline-none px-2 py-2 placeholder:opacity-50"
           style={{ color: textColor }}
         />
         
         <button
           onClick={handleSearch}
-          className="transition-colors p-2 hover:opacity-70"
+          className="transition-colors p-2 rounded-lg hover:bg-black/10"
           style={{ color: textColor }}
         >
           <Search size={20} />
