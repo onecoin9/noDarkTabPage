@@ -31,6 +31,14 @@ const defaultSettings: AppSettings = {
   searchBoxColor: '#ffffff',
   searchBoxRadius: 9999,
   clockFontSize: 80,
+  clockStyle: {
+    fontFamily: 'system',
+    fontWeight: 200,
+    color: '#ffffff',
+    opacity: 100,
+    shadow: true,
+    separator: ':',
+  },
   clockPosition: { preset: 'center', offsetX: 0, offsetY: -80 },
   searchPosition: { preset: 'center', offsetX: 0, offsetY: 0 },
   background: {

@@ -2,11 +2,34 @@ import { motion } from 'framer-motion';
 import { useTime } from '../hooks/useTime';
 import { useAppStore } from '../stores/useAppStore';
 import { EditableWidget } from './EditableWidget';
+import type { ClockFontFamily } from '../types';
+
+// 获取字体 CSS
+function getFontFamily(font: ClockFontFamily): string {
+  const fontMap: Record<ClockFontFamily, string> = {
+    system: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    serif: 'Georgia, "Times New Roman", serif',
+    mono: '"SF Mono", "Fira Code", "Consolas", monospace',
+    rounded: '"SF Pro Rounded", "Nunito", system-ui, sans-serif',
+    elegant: '"Playfair Display", Georgia, serif',
+    digital: '"Orbitron", "Share Tech Mono", monospace',
+  };
+  return fontMap[font];
+}
 
 export function Clock() {
   const settings = useAppStore((s) => s.settings);
   const updateSettings = useAppStore((s) => s.updateSettings);
-  const { time, date } = useTime(settings.showSeconds, settings.timeFormat);
+  const clockStyle = settings.clockStyle || {
+    fontFamily: 'system' as ClockFontFamily,
+    fontWeight: 200,
+    color: '#ffffff',
+    opacity: 100,
+    shadow: true,
+    separator: ':' as const,
+  };
+  
+  const { time, date } = useTime(settings.showSeconds, settings.timeFormat, clockStyle.separator);
   const fontSize = settings.clockFontSize || 80;
   const position = settings.clockPosition || { preset: 'center', offsetX: 0, offsetY: -80 };
 
@@ -27,15 +50,28 @@ export function Clock() {
         className="text-center"
       >
         <div 
-          className="font-extralight tracking-tight text-white drop-shadow-lg"
-          style={{ fontSize: `${fontSize}px` }}
+          className="tracking-tight"
+          style={{ 
+            fontSize: `${fontSize}px`,
+            fontFamily: getFontFamily(clockStyle.fontFamily),
+            fontWeight: clockStyle.fontWeight,
+            color: clockStyle.color,
+            opacity: clockStyle.opacity / 100,
+            textShadow: clockStyle.shadow ? '0 4px 12px rgba(0,0,0,0.3)' : 'none',
+          }}
         >
           {time}
         </div>
         {settings.showDate && (
           <div 
-            className="text-white/90 mt-3 font-light"
-            style={{ fontSize: `${Math.max(fontSize * 0.2, 16)}px` }}
+            className="mt-3"
+            style={{ 
+              fontSize: `${Math.max(fontSize * 0.2, 16)}px`,
+              fontFamily: getFontFamily(clockStyle.fontFamily),
+              fontWeight: Math.max(clockStyle.fontWeight - 100, 100),
+              color: clockStyle.color,
+              opacity: (clockStyle.opacity / 100) * 0.9,
+            }}
           >
             {date}
           </div>

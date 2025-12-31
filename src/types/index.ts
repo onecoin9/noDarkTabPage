@@ -44,6 +44,25 @@ export type BookmarkPosition = PositionPreset;
 // 时间格式
 export type TimeFormat = '12h' | '24h';
 
+// 时钟字体
+export type ClockFontFamily = 
+  | 'system' 
+  | 'serif' 
+  | 'mono' 
+  | 'rounded'
+  | 'elegant'
+  | 'digital';
+
+// 时钟样式配置
+export interface ClockStyle {
+  fontFamily: ClockFontFamily;
+  fontWeight: number; // 100-900
+  color: string;
+  opacity: number; // 0-100
+  shadow: boolean;
+  separator: ':' | '.' | ' ';
+}
+
 // 待办事项
 export interface Todo {
   id: string;
@@ -93,6 +112,7 @@ export interface AppSettings {
   
   // 时间字体大小
   clockFontSize: number;
+  clockStyle: ClockStyle;
   
   // 组件位置
   clockPosition: ComponentPosition;

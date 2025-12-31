@@ -6,21 +6,25 @@ interface TimeInfo {
   date: string;
 }
 
-export function useTime(showSeconds: boolean = false, format: TimeFormat = '24h'): TimeInfo {
-  const [timeInfo, setTimeInfo] = useState<TimeInfo>(() => getTimeInfo(showSeconds, format));
+export function useTime(
+  showSeconds: boolean = false, 
+  format: TimeFormat = '24h',
+  separator: string = ':'
+): TimeInfo {
+  const [timeInfo, setTimeInfo] = useState<TimeInfo>(() => getTimeInfo(showSeconds, format, separator));
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setTimeInfo(getTimeInfo(showSeconds, format));
+      setTimeInfo(getTimeInfo(showSeconds, format, separator));
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [showSeconds, format]);
+  }, [showSeconds, format, separator]);
 
   return timeInfo;
 }
 
-function getTimeInfo(showSeconds: boolean, format: TimeFormat): TimeInfo {
+function getTimeInfo(showSeconds: boolean, format: TimeFormat, separator: string): TimeInfo {
   const now = new Date();
   let hours = now.getHours();
   const minutes = String(now.getMinutes()).padStart(2, '0');
@@ -34,8 +38,8 @@ function getTimeInfo(showSeconds: boolean, format: TimeFormat): TimeInfo {
   
   const hoursStr = String(hours).padStart(2, '0');
   const time = showSeconds 
-    ? `${hoursStr}:${minutes}:${seconds}${period}`
-    : `${hoursStr}:${minutes}${period}`;
+    ? `${hoursStr}${separator}${minutes}${separator}${seconds}${period}`
+    : `${hoursStr}${separator}${minutes}${period}`;
   
   const days = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
   const year = now.getFullYear();
