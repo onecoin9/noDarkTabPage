@@ -1,7 +1,25 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, X, Settings, Trash2 } from 'lucide-react';
+import { Plus, X, Settings, Trash2, GripVertical } from 'lucide-react';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import type { DragEndEvent } from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  rectSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { useAppStore } from '../stores/useAppStore';
+import { useEditMode } from '../stores/useEditMode';
 import type { Bookmark } from '../types';
 
 // 预设图标
@@ -45,24 +63,54 @@ interface BookmarkItemProps {
   onDelete: (id: string) => void;
 }
 
-function BookmarkItem({ bookmark, index, onEdit }: Omit<BookmarkItemProps, 'onDelete'>) {
+function SortableBookmarkItem({ bookmark, onEdit }: Omit<BookmarkItemProps, 'onDelete' | 'index'>) {
   const [showSettings, setShowSettings] = useState(false);
+  const { isEditMode } = useEditMode();
+  
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: bookmark.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : undefined,
+    opacity: isDragging ? 0.8 : 1,
+  };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.4 + index * 0.05 }}
+    <div
+      ref={setNodeRef}
+      style={style}
       className="relative group"
       onMouseEnter={() => setShowSettings(true)}
       onMouseLeave={() => setShowSettings(false)}
     >
+      {/* 拖拽手柄 - 编辑模式下显示 */}
+      {isEditMode && (
+        <div
+          {...attributes}
+          {...listeners}
+          className="absolute -left-1 top-1/2 -translate-y-1/2 w-6 h-10 flex items-center justify-center cursor-grab active:cursor-grabbing text-white/40 hover:text-white/70 z-10"
+        >
+          <GripVertical size={16} />
+        </div>
+      )}
+      
       <motion.a
-        href={bookmark.url}
+        href={isEditMode ? undefined : bookmark.url}
         target="_blank"
         rel="noopener noreferrer"
-        whileHover={{ y: -5, scale: 1.02 }}
-        className="flex flex-col items-center gap-2 p-5 bg-white/15 backdrop-blur-sm rounded-2xl border border-white/20 text-white cursor-pointer transition-all hover:bg-white/25 hover:shadow-lg relative overflow-hidden"
+        onClick={(e) => isEditMode && e.preventDefault()}
+        whileHover={isEditMode ? {} : { y: -5, scale: 1.02 }}
+        className={`flex flex-col items-center gap-2 p-5 bg-white/15 backdrop-blur-sm rounded-2xl border text-white cursor-pointer transition-all hover:bg-white/25 hover:shadow-lg relative overflow-hidden ${
+          isEditMode ? 'border-indigo-500/50 ring-1 ring-indigo-500/30' : 'border-white/20'
+        }`}
       >
         {bookmark.icon.startsWith('http') ? (
           <img src={bookmark.icon} alt={bookmark.title} className="w-10 h-10 rounded-lg" />
@@ -90,7 +138,7 @@ function BookmarkItem({ bookmark, index, onEdit }: Omit<BookmarkItemProps, 'onDe
           )}
         </AnimatePresence>
       </motion.a>
-    </motion.div>
+    </div>
   );
 }
 
@@ -308,8 +356,31 @@ export function BookmarkGrid() {
   const addBookmark = useAppStore((s) => s.addBookmark);
   const updateBookmark = useAppStore((s) => s.updateBookmark);
   const removeBookmark = useAppStore((s) => s.removeBookmark);
+  const reorderBookmarks = useAppStore((s) => s.reorderBookmarks);
   const [editingBookmark, setEditingBookmark] = useState<Bookmark | null>(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    if (over && active.id !== over.id) {
+      const oldIndex = bookmarks.findIndex((b) => b.id === active.id);
+      const newIndex = bookmarks.findIndex((b) => b.id === over.id);
+      const newBookmarks = arrayMove(bookmarks, oldIndex, newIndex);
+      reorderBookmarks(newBookmarks);
+    }
+  };
 
   const handleSave = (data: Omit<Bookmark, 'id'> & { id?: string }) => {
     if (data.id) {
@@ -329,28 +400,35 @@ export function BookmarkGrid() {
         transition={{ duration: 0.8, delay: 0.4 }}
         className="w-full max-w-4xl mx-auto"
       >
-        <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-4">
-          {bookmarks.map((bookmark, index) => (
-            <BookmarkItem
-              key={bookmark.id}
-              bookmark={bookmark}
-              index={index}
-              onEdit={setEditingBookmark}
-            />
-          ))}
-          
-          {/* 添加按钮 - 始终显示 */}
-          <motion.button
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            whileHover={{ scale: 1.05 }}
-            onClick={() => setIsAddingNew(true)}
-            className="flex flex-col items-center justify-center gap-2 p-5 bg-white/5 backdrop-blur-sm rounded-2xl border-2 border-dashed border-white/20 text-white/40 hover:bg-white/10 hover:border-white/40 hover:text-white/70 transition-all"
-          >
-            <Plus size={28} />
-            <span className="text-xs">添加</span>
-          </motion.button>
-        </div>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext items={bookmarks.map(b => b.id)} strategy={rectSortingStrategy}>
+            <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-4">
+              {bookmarks.map((bookmark) => (
+                <SortableBookmarkItem
+                  key={bookmark.id}
+                  bookmark={bookmark}
+                  onEdit={setEditingBookmark}
+                />
+              ))}
+              
+              {/* 添加按钮 - 始终显示 */}
+              <motion.button
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                whileHover={{ scale: 1.05 }}
+                onClick={() => setIsAddingNew(true)}
+                className="flex flex-col items-center justify-center gap-2 p-5 bg-white/5 backdrop-blur-sm rounded-2xl border-2 border-dashed border-white/20 text-white/40 hover:bg-white/10 hover:border-white/40 hover:text-white/70 transition-all"
+              >
+                <Plus size={28} />
+                <span className="text-xs">添加</span>
+              </motion.button>
+            </div>
+          </SortableContext>
+        </DndContext>
       </motion.div>
 
       {/* 编辑弹窗 */}

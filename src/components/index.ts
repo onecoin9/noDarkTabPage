@@ -4,6 +4,7 @@ export { BookmarkGrid } from './BookmarkGrid';
 export { SettingsButton } from './SettingsButton';
 export { Background } from './Background';
 export { CustomCss } from './CustomCss';
+export { EditModeButton } from './EditModeButton';
 export { SettingsModal } from './Settings/SettingsModal';
 export { 
   Pomodoro, 

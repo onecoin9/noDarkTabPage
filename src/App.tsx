@@ -5,6 +5,7 @@ import {
   SettingsButton,
   Background,
   CustomCss,
+  EditModeButton,
   SettingsModal,
   Pomodoro,
   TodoList,
@@ -26,6 +27,7 @@ function App() {
       <Background />
       <CustomCss />
       <SettingsButton />
+      <EditModeButton />
       <SettingsModal />
 
       {/* 左侧小组件 */}
