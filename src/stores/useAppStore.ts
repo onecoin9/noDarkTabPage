@@ -54,6 +54,10 @@ const defaultSettings: AppSettings = {
   showCountdown: false,
   showNote: false,
   showCalendar: false,
+  weatherPosition: { preset: 'center-left', offsetX: 0, offsetY: -100 },
+  pomodoroPosition: { preset: 'center-left', offsetX: 0, offsetY: 100 },
+  todoPosition: { preset: 'center-right', offsetX: 0, offsetY: 0 },
+  quotePosition: { preset: 'center', offsetX: 0, offsetY: 60 },
   weatherCity: '北京',
   weatherUnit: 'celsius',
 };

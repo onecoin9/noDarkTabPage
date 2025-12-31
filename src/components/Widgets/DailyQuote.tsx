@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useAppStore } from '../../stores/useAppStore';
+import { EditableWidget } from '../EditableWidget';
 
 interface Quote {
   content: string;
@@ -24,9 +26,11 @@ const quotes: Quote[] = [
 
 export function DailyQuote() {
   const [quote, setQuote] = useState<Quote | null>(null);
+  const settings = useAppStore((s) => s.settings);
+  const updateSettings = useAppStore((s) => s.updateSettings);
+  const position = settings.quotePosition || { preset: 'center', offsetX: 0, offsetY: 60 };
 
   useEffect(() => {
-    // 根据日期选择名言，每天固定显示同一条
     const today = new Date();
     const dayOfYear = Math.floor(
       (today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000
@@ -38,19 +42,25 @@ export function DailyQuote() {
   if (!quote) return null;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.5 }}
-      className="text-center max-w-xl mx-auto"
+    <EditableWidget
+      name="每日一言"
+      position={position}
+      onPositionChange={(pos) => updateSettings({ quotePosition: pos })}
     >
-      <p className="text-white/80 text-lg md:text-xl font-light leading-relaxed">
-        「{quote.content}」
-      </p>
-      <p className="text-white/50 text-sm mt-2">
-        —— {quote.author}
-        {quote.source && <span>《{quote.source}》</span>}
-      </p>
-    </motion.div>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+        className="text-center max-w-xl"
+      >
+        <p className="text-white/80 text-lg md:text-xl font-light leading-relaxed">
+          「{quote.content}」
+        </p>
+        <p className="text-white/50 text-sm mt-2">
+          —— {quote.author}
+          {quote.source && <span>《{quote.source}》</span>}
+        </p>
+      </motion.div>
+    </EditableWidget>
   );
 }

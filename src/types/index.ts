@@ -122,6 +122,12 @@ export interface AppSettings {
   showNote: boolean;
   showCalendar: boolean;
   
+  // 小组件位置
+  weatherPosition: ComponentPosition;
+  pomodoroPosition: ComponentPosition;
+  todoPosition: ComponentPosition;
+  quotePosition: ComponentPosition;
+  
   // 天气
   weatherCity: string;
   weatherUnit: 'celsius' | 'fahrenheit';
