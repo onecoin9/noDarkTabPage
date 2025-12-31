@@ -222,11 +222,13 @@ export function WallpaperSettings() {
           {settings.background.value && settings.background.type === 'wallhaven' && (
             <div className="mt-4">
               <p className="text-slate-400 text-sm mb-2">当前壁纸预览：</p>
-              <img 
-                src={settings.background.value} 
-                alt="当前壁纸" 
-                className="w-full h-32 object-cover rounded-xl"
-              />
+              <div className="relative aspect-video rounded-xl overflow-hidden bg-slate-800">
+                <img 
+                  src={settings.background.value} 
+                  alt="当前壁纸" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
               <a
                 href={settings.background.value}
                 download
