@@ -78,6 +78,7 @@ export function BookmarkPanel({ isOpen, onClose }: BookmarkPanelProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [uploadedXBEL, setUploadedXBEL] = useState<string | null>(null);
 
   useEffect(() => {
     // 检查是否在扩展环境中
@@ -93,11 +94,15 @@ export function BookmarkPanel({ isOpen, onClose }: BookmarkPanelProps) {
     if (isOpen) {
       if (mode === 'extension' && isExtension) {
         loadChromeBookmarks();
-      } else if (mode === 'webdav' && settings.webdavUrl) {
-        loadWebDAVBookmarks();
+      } else if (mode === 'webdav') {
+        if (uploadedXBEL) {
+          loadFromXBELText(uploadedXBEL);
+        } else if (settings.webdavUrl) {
+          loadWebDAVBookmarks();
+        }
       }
     }
-  }, [isOpen, mode]);
+  }, [isOpen, mode, uploadedXBEL]);
 
   const loadChromeBookmarks = async () => {
     try {
@@ -112,6 +117,24 @@ export function BookmarkPanel({ isOpen, onClose }: BookmarkPanelProps) {
     } catch (err) {
       setError('读取浏览器书签失败');
       console.error('读取浏览器书签失败:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadFromXBELText = (xmlText: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const parsed = parseXBEL(xmlText);
+      setBookmarks(parsed);
+      
+      // 默认展开第一层
+      const firstLevelIds = parsed.map(b => b.id);
+      setExpandedFolders(new Set(firstLevelIds));
+    } catch (err) {
+      setError('解析 XBEL 文件失败');
+      console.error('解析 XBEL 失败:', err);
     } finally {
       setLoading(false);
     }
@@ -141,18 +164,26 @@ export function BookmarkPanel({ isOpen, onClose }: BookmarkPanelProps) {
       }
       
       const xmlText = await response.text();
-      const parsed = parseXBEL(xmlText);
-      setBookmarks(parsed);
-      
-      // 默认展开第一层
-      const firstLevelIds = parsed.map(b => b.id);
-      setExpandedFolders(new Set(firstLevelIds));
+      loadFromXBELText(xmlText);
     } catch (err) {
       setError(err instanceof Error ? err.message : '加载书签失败');
       console.error('加载 WebDAV 书签失败:', err);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      setUploadedXBEL(text);
+      loadFromXBELText(text);
+    };
+    reader.readAsText(file);
   };
 
   const toggleFolder = (id: string) => {
@@ -358,12 +389,27 @@ export function BookmarkPanel({ isOpen, onClose }: BookmarkPanelProps) {
                     {mode === 'webdav' && (
                       <>
                         <div>
+                          <label className="text-slate-400 text-xs mb-1 block">上传 XBEL 文件</label>
+                          <input
+                            type="file"
+                            accept=".xbel,.xml"
+                            onChange={handleFileUpload}
+                            className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-xs focus:outline-none focus:border-indigo-500 file:mr-2 file:py-1 file:px-3 file:rounded file:border-0 file:bg-indigo-500 file:text-white file:text-xs hover:file:bg-indigo-600"
+                          />
+                          <p className="text-slate-500 text-xs mt-1">从浏览器导出的 XBEL 格式书签文件</p>
+                        </div>
+                        
+                        <div className="border-t border-slate-600 pt-3">
+                          <p className="text-slate-400 text-xs mb-2">或使用 WebDAV 同步</p>
+                        </div>
+                        
+                        <div>
                           <label className="text-slate-400 text-xs mb-1 block">XBEL 文件 URL</label>
                           <input
                             type="text"
                             value={settings.webdavUrl || ''}
                             onChange={(e) => updateSettings({ webdavUrl: e.target.value })}
-                            placeholder="https://dav.example.com/bookmarks.xbel"
+                            placeholder="https://dav.jianguoyun.com/dav/Floccus/bookmarks.xbel"
                             className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-xs focus:outline-none focus:border-indigo-500"
                           />
                         </div>
@@ -448,8 +494,10 @@ export function BookmarkPanel({ isOpen, onClose }: BookmarkPanelProps) {
             <div className="p-4 border-t border-slate-700/50 text-xs text-slate-500">
               {mode === 'extension' ? (
                 <p>💡 点击文件夹右侧的 + 可打开该文件夹内所有书签</p>
+              ) : uploadedXBEL ? (
+                <p>✅ 已加载本地 XBEL 文件</p>
               ) : (
-                <p>💡 支持 Firefox/Chrome 导出的 XBEL 格式书签文件</p>
+                <p>💡 支持上传 XBEL 文件或通过 WebDAV 同步</p>
               )}
             </div>
           </motion.div>
