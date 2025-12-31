@@ -4,21 +4,49 @@ import { Plus, X, Settings } from 'lucide-react';
 import { useAppStore } from '../stores/useAppStore';
 import type { Bookmark } from '../types';
 
+// 预设图标
+const presetIcons = [
+  '🔍', '💻', '📺', '📧', '📱', '🎵', '🛒', '📝',
+  '🎮', '📚', '🎬', '💬', '📷', '🎨', '💼', '🏠',
+  '⚙️', '🔔', '📅', '💡', '🔒', '🌐', '⭐', '❤️',
+  '🚀', '💰', '📊', '🎯', '🔥', '✨', '🌙', '☀️',
+];
+
+// 常用网站预设图标
+const websiteIcons: Record<string, string> = {
+  'google': 'https://www.google.com/favicon.ico',
+  'github': 'https://github.com/favicon.ico',
+  'youtube': 'https://www.youtube.com/favicon.ico',
+  'twitter': 'https://twitter.com/favicon.ico',
+  'facebook': 'https://www.facebook.com/favicon.ico',
+  'instagram': 'https://www.instagram.com/favicon.ico',
+  'linkedin': 'https://www.linkedin.com/favicon.ico',
+  'reddit': 'https://www.reddit.com/favicon.ico',
+  'netflix': 'https://www.netflix.com/favicon.ico',
+  'spotify': 'https://www.spotify.com/favicon.ico',
+  'amazon': 'https://www.amazon.com/favicon.ico',
+  'bilibili': 'https://www.bilibili.com/favicon.ico',
+  'zhihu': 'https://www.zhihu.com/favicon.ico',
+  'weibo': 'https://weibo.com/favicon.ico',
+  'taobao': 'https://www.taobao.com/favicon.ico',
+  'jd': 'https://www.jd.com/favicon.ico',
+  'notion': 'https://www.notion.so/favicon.ico',
+  'figma': 'https://www.figma.com/favicon.ico',
+  'dribbble': 'https://dribbble.com/favicon.ico',
+  'discord': 'https://discord.com/favicon.ico',
+  'slack': 'https://slack.com/favicon.ico',
+  'telegram': 'https://telegram.org/favicon.ico',
+};
+
 interface BookmarkItemProps {
   bookmark: Bookmark;
   index: number;
-  isEditMode: boolean;
   onEdit: (bookmark: Bookmark) => void;
   onDelete: (id: string) => void;
 }
 
-function BookmarkItem({ bookmark, index, isEditMode, onEdit, onDelete }: BookmarkItemProps) {
-  const handleClick = (e: React.MouseEvent) => {
-    if (isEditMode) {
-      e.preventDefault();
-      onEdit(bookmark);
-    }
-  };
+function BookmarkItem({ bookmark, index, onEdit }: Omit<BookmarkItemProps, 'onDelete'>) {
+  const [showSettings, setShowSettings] = useState(false);
 
   return (
     <motion.div
@@ -26,16 +54,15 @@ function BookmarkItem({ bookmark, index, isEditMode, onEdit, onDelete }: Bookmar
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.4 + index * 0.05 }}
       className="relative group"
+      onMouseEnter={() => setShowSettings(true)}
+      onMouseLeave={() => setShowSettings(false)}
     >
       <motion.a
-        href={isEditMode ? undefined : bookmark.url}
+        href={bookmark.url}
         target="_blank"
         rel="noopener noreferrer"
-        onClick={handleClick}
-        whileHover={{ y: isEditMode ? 0 : -5, scale: 1.02 }}
-        className={`flex flex-col items-center gap-2 p-5 bg-white/15 backdrop-blur-sm rounded-2xl border border-white/20 text-white cursor-pointer transition-all hover:bg-white/25 hover:shadow-lg ${
-          isEditMode ? 'ring-2 ring-indigo-500/50' : ''
-        }`}
+        whileHover={{ y: -5, scale: 1.02 }}
+        className="flex flex-col items-center gap-2 p-5 bg-white/15 backdrop-blur-sm rounded-2xl border border-white/20 text-white cursor-pointer transition-all hover:bg-white/25 hover:shadow-lg"
       >
         {bookmark.icon.startsWith('http') ? (
           <img src={bookmark.icon} alt={bookmark.title} className="w-10 h-10 rounded-lg" />
@@ -45,15 +72,24 @@ function BookmarkItem({ bookmark, index, isEditMode, onEdit, onDelete }: Bookmar
         <span className="text-sm font-medium text-center truncate w-full">{bookmark.title}</span>
       </motion.a>
       
-      {/* 编辑模式下显示删除按钮 */}
-      {isEditMode && (
-        <button
-          onClick={() => onDelete(bookmark.id)}
-          className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-white shadow-lg transition-colors"
-        >
-          <X size={14} />
-        </button>
-      )}
+      {/* Hover 时显示设置按钮 */}
+      <AnimatePresence>
+        {showSettings && (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onEdit(bookmark);
+            }}
+            className="absolute -top-2 -right-2 w-7 h-7 bg-white/20 hover:bg-white/40 backdrop-blur-sm rounded-full flex items-center justify-center text-white shadow-lg transition-all"
+          >
+            <Settings size={14} />
+          </motion.button>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
@@ -62,13 +98,15 @@ interface EditModalProps {
   bookmark: Bookmark | null;
   isNew: boolean;
   onSave: (bookmark: Omit<Bookmark, 'id'> & { id?: string }) => void;
+  onDelete?: (id: string) => void;
   onClose: () => void;
 }
 
-function EditModal({ bookmark, isNew, onSave, onClose }: EditModalProps) {
+function EditModal({ bookmark, isNew, onSave, onDelete, onClose }: EditModalProps) {
   const [title, setTitle] = useState(bookmark?.title || '');
   const [url, setUrl] = useState(bookmark?.url || '');
   const [icon, setIcon] = useState(bookmark?.icon || '🔗');
+  const [showIconPicker, setShowIconPicker] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -107,41 +145,109 @@ function EditModal({ bookmark, isNew, onSave, onClose }: EditModalProps) {
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
         onClick={(e) => e.stopPropagation()}
-        className="bg-slate-900 rounded-2xl p-6 w-full max-w-md border border-slate-700"
+        className="bg-slate-900 rounded-2xl p-6 w-full max-w-md border border-slate-700 max-h-[90vh] overflow-y-auto"
       >
-        <h3 className="text-xl font-semibold text-white mb-4">
-          {isNew ? '添加书签' : '编辑书签'}
-        </h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xl font-semibold text-white">
+            {isNew ? '添加书签' : '编辑书签'}
+          </h3>
+          {!isNew && onDelete && (
+            <button
+              onClick={() => {
+                if (bookmark && confirm('确定删除这个书签吗？')) {
+                  onDelete(bookmark.id);
+                  onClose();
+                }
+              }}
+              className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-lg transition-colors"
+            >
+              <X size={20} />
+            </button>
+          )}
+        </div>
         
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* 图标选择 */}
           <div>
-            <label className="text-slate-400 text-sm mb-1 block">图标</label>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={icon}
-                onChange={(e) => setIcon(e.target.value)}
-                placeholder="emoji 或图片 URL"
-                className="flex-1 px-4 py-2 bg-slate-800 border border-slate-600 rounded-xl text-white focus:outline-none focus:border-indigo-500"
-              />
-              <button
-                type="button"
-                onClick={fetchFavicon}
-                className="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-xl text-sm"
+            <label className="text-slate-400 text-sm mb-2 block">图标</label>
+            <div className="flex gap-2 mb-2">
+              <div 
+                onClick={() => setShowIconPicker(!showIconPicker)}
+                className="w-14 h-14 bg-slate-800 rounded-xl flex items-center justify-center cursor-pointer hover:bg-slate-700 transition-colors border border-slate-600"
               >
-                自动获取
-              </button>
-            </div>
-            {icon && (
-              <div className="mt-2 flex items-center gap-2">
-                <span className="text-slate-400 text-sm">预览:</span>
                 {icon.startsWith('http') ? (
                   <img src={icon} alt="icon" className="w-8 h-8 rounded" />
                 ) : (
-                  <span className="text-2xl">{icon}</span>
+                  <span className="text-3xl">{icon}</span>
                 )}
               </div>
-            )}
+              <div className="flex-1 flex flex-col gap-2">
+                <input
+                  type="text"
+                  value={icon}
+                  onChange={(e) => setIcon(e.target.value)}
+                  placeholder="emoji 或图片 URL"
+                  className="flex-1 px-3 py-2 bg-slate-800 border border-slate-600 rounded-xl text-white text-sm focus:outline-none focus:border-indigo-500"
+                />
+                <button
+                  type="button"
+                  onClick={fetchFavicon}
+                  className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-sm transition-colors"
+                >
+                  自动获取网站图标
+                </button>
+              </div>
+            </div>
+            
+            {/* 图标选择器 */}
+            <AnimatePresence>
+              {showIconPicker && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="overflow-hidden"
+                >
+                  <div className="bg-slate-800 rounded-xl p-3 mt-2 border border-slate-600">
+                    <p className="text-slate-400 text-xs mb-2">Emoji 图标</p>
+                    <div className="grid grid-cols-8 gap-1 mb-3">
+                      {presetIcons.map((emoji) => (
+                        <button
+                          key={emoji}
+                          type="button"
+                          onClick={() => {
+                            setIcon(emoji);
+                            setShowIconPicker(false);
+                          }}
+                          className={`w-8 h-8 rounded-lg flex items-center justify-center hover:bg-slate-700 transition-colors ${
+                            icon === emoji ? 'bg-indigo-500/30 ring-1 ring-indigo-500' : ''
+                          }`}
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-slate-400 text-xs mb-2">常用网站</p>
+                    <div className="grid grid-cols-6 gap-1">
+                      {Object.entries(websiteIcons).map(([name, iconUrl]) => (
+                        <button
+                          key={name}
+                          type="button"
+                          onClick={() => {
+                            setIcon(iconUrl);
+                            setShowIconPicker(false);
+                          }}
+                          className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-slate-700 transition-colors"
+                          title={name}
+                        >
+                          <img src={iconUrl} alt={name} className="w-5 h-5" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
           
           <div>
@@ -192,7 +298,6 @@ export function BookmarkGrid() {
   const addBookmark = useAppStore((s) => s.addBookmark);
   const updateBookmark = useAppStore((s) => s.updateBookmark);
   const removeBookmark = useAppStore((s) => s.removeBookmark);
-  const [isEditMode, setIsEditMode] = useState(false);
   const [editingBookmark, setEditingBookmark] = useState<Bookmark | null>(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
 
@@ -214,45 +319,27 @@ export function BookmarkGrid() {
         transition={{ duration: 0.8, delay: 0.4 }}
         className="w-full max-w-4xl mx-auto"
       >
-        {/* 编辑模式切换按钮 */}
-        <div className="flex justify-end mb-4">
-          <button
-            onClick={() => setIsEditMode(!isEditMode)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${
-              isEditMode 
-                ? 'bg-indigo-500 text-white' 
-                : 'bg-white/10 text-white/70 hover:bg-white/20'
-            }`}
-          >
-            <Settings size={18} />
-            {isEditMode ? '完成编辑' : '编辑书签'}
-          </button>
-        </div>
-
         <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-4">
           {bookmarks.map((bookmark, index) => (
             <BookmarkItem
               key={bookmark.id}
               bookmark={bookmark}
               index={index}
-              isEditMode={isEditMode}
               onEdit={setEditingBookmark}
-              onDelete={removeBookmark}
             />
           ))}
           
-          {/* 添加按钮 */}
-          {isEditMode && (
-            <motion.button
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              onClick={() => setIsAddingNew(true)}
-              className="flex flex-col items-center justify-center gap-2 p-5 bg-white/10 backdrop-blur-sm rounded-2xl border-2 border-dashed border-white/30 text-white/60 hover:bg-white/15 hover:border-white/50 hover:text-white transition-all"
-            >
-              <Plus size={32} />
-              <span className="text-sm">添加</span>
-            </motion.button>
-          )}
+          {/* 添加按钮 - 始终显示 */}
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            whileHover={{ scale: 1.05 }}
+            onClick={() => setIsAddingNew(true)}
+            className="flex flex-col items-center justify-center gap-2 p-5 bg-white/5 backdrop-blur-sm rounded-2xl border-2 border-dashed border-white/20 text-white/40 hover:bg-white/10 hover:border-white/40 hover:text-white/70 transition-all"
+          >
+            <Plus size={28} />
+            <span className="text-xs">添加</span>
+          </motion.button>
         </div>
       </motion.div>
 
@@ -263,6 +350,7 @@ export function BookmarkGrid() {
             bookmark={editingBookmark}
             isNew={isAddingNew}
             onSave={handleSave}
+            onDelete={removeBookmark}
             onClose={() => {
               setEditingBookmark(null);
               setIsAddingNew(false);
