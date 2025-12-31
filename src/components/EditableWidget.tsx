@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
-import { GripHorizontal } from 'lucide-react';
+import { Move } from 'lucide-react';
 import { useEditMode } from '../stores/useEditMode';
 import type { ComponentPosition, PositionPreset } from '../types';
 
@@ -124,25 +124,24 @@ export function EditableWidget({
       style={positionStyle}
       className={`z-10 group ${className}`}
     >
-      {/* 编辑模式工具栏 */}
+      {/* 编辑模式工具栏 - 更简洁的设计 */}
       <motion.div
         initial={{ opacity: 0, y: 5 }}
         animate={{ opacity: 1, y: 0 }}
-        className="absolute -top-8 left-0 flex items-center gap-1 bg-slate-800/90 backdrop-blur-sm rounded-lg px-2 py-1 text-xs text-white shadow-lg"
+        onMouseDown={handleDragStart}
+        className="absolute -top-7 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-indigo-500/90 backdrop-blur-sm rounded-full px-3 py-1 text-xs text-white shadow-lg cursor-move select-none hover:bg-indigo-500 transition-colors"
       >
-        {/* 拖拽手柄 */}
-        <button
-          onMouseDown={handleDragStart}
-          className="p-1 hover:bg-white/10 rounded cursor-move"
-          title="拖拽移动"
-        >
-          <GripHorizontal size={14} />
-        </button>
-        <span className="text-slate-400 px-1">{name}</span>
+        <Move size={12} />
+        <span className="font-medium">{name}</span>
+        {onSizeChange && size && (
+          <span className="text-indigo-200 ml-1">{size}px</span>
+        )}
       </motion.div>
 
       {/* 虚线边框 */}
-      <div className="absolute -inset-3 border-2 border-dashed border-indigo-500/50 rounded-xl pointer-events-none group-hover:border-indigo-500/80 transition-colors" />
+      <div className={`absolute -inset-2 border-2 border-dashed rounded-xl pointer-events-none transition-colors ${
+        isDragging || isResizing ? 'border-indigo-400' : 'border-indigo-500/40 group-hover:border-indigo-500/70'
+      }`} />
 
       {children}
 
@@ -150,24 +149,9 @@ export function EditableWidget({
       {onSizeChange && (
         <motion.div
           onMouseDown={handleResizeStart}
-          whileHover={{ scale: 1.2 }}
-          className="absolute -bottom-2 -right-2 w-4 h-4 cursor-se-resize flex items-center justify-center z-20"
-        >
-          <svg viewBox="0 0 10 10" className="w-3 h-3 text-indigo-500" fill="currentColor">
-            <path d="M9 9H7V7H9V9ZM9 5H7V3H9V5ZM5 9H3V7H5V9Z" />
-          </svg>
-        </motion.div>
-      )}
-
-      {/* 底部调整手柄 */}
-      {onSizeChange && (
-        <motion.div
-          onMouseDown={handleResizeStart}
-          whileHover={{ scaleX: 1.1 }}
-          className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-12 h-2 cursor-s-resize flex items-center justify-center z-20 opacity-0 group-hover:opacity-100 transition-opacity"
-        >
-          <div className={`w-8 h-1 rounded-full ${isResizing ? 'bg-indigo-400' : 'bg-indigo-500/60'}`} />
-        </motion.div>
+          whileHover={{ scale: 1.3 }}
+          className="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-indigo-500 rounded-full cursor-se-resize shadow-md hover:bg-indigo-400 transition-colors"
+        />
       )}
 
       {/* 大小/位置提示 */}
@@ -175,9 +159,9 @@ export function EditableWidget({
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="absolute -bottom-8 left-1/2 -translate-x-1/2 px-2 py-1 bg-indigo-500 text-white text-xs rounded shadow-lg whitespace-nowrap"
+          className="absolute -bottom-7 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-slate-800 text-white text-xs rounded shadow-lg whitespace-nowrap"
         >
-          {isResizing && size ? `${size}px` : `X: ${position.offsetX}, Y: ${position.offsetY}`}
+          {isResizing && size ? `${size}px` : `${position.offsetX}, ${position.offsetY}`}
         </motion.div>
       )}
     </div>

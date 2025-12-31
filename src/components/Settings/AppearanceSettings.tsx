@@ -1,5 +1,5 @@
 import { useAppStore } from '../../stores/useAppStore';
-import type { SearchEngine, BookmarkDisplayMode, BookmarkPosition } from '../../types';
+import type { SearchEngine, BookmarkPosition } from '../../types';
 import { Search, Grid3X3, ArrowUpLeft, ArrowUp, ArrowUpRight, ArrowLeft, Move, ArrowRight, ArrowDownLeft, ArrowDown, ArrowDownRight } from 'lucide-react';
 
 const colorPresets = [
@@ -117,27 +117,6 @@ export function AppearanceSettings() {
               <span>全圆</span>
             </div>
           </div>
-        </div>
-      </section>
-
-      <section>
-        <h3 className="text-lg font-medium text-white mb-4">书签显示</h3>
-        <div className="grid grid-cols-3 gap-3">
-          {(['grid', 'list', 'icon'] as BookmarkDisplayMode[]).map((mode) => (
-            <button
-              key={mode}
-              onClick={() => updateSettings({ bookmarkDisplayMode: mode })}
-              className={`p-3 rounded-xl border transition-all ${
-                settings.bookmarkDisplayMode === mode
-                  ? 'border-indigo-500 bg-indigo-500/20 text-white'
-                  : 'border-slate-600 bg-slate-800/50 text-slate-300 hover:border-slate-500'
-              }`}
-            >
-              {mode === 'grid' && '网格'}
-              {mode === 'list' && '列表'}
-              {mode === 'icon' && '图标'}
-            </button>
-          ))}
         </div>
       </section>
 
