@@ -294,21 +294,38 @@ export const useAppStore = create<AppState>()(
           const config = JSON.parse(json);
           const currentState = get();
           
-          // 深度合并设置，保留所有字段
-          if (config.settings) {
-            set({ 
-              settings: {
-                ...currentState.settings,
-                ...config.settings,
-              }
-            });
-          }
+          console.log('导入配置 - 当前状态:', currentState);
+          console.log('导入配置 - 新配置:', config);
           
-          if (config.bookmarks) set({ bookmarks: config.bookmarks });
-          if (config.todos) set({ todos: config.todos });
+          // 深度合并设置，保留所有字段
+          const newSettings = config.settings ? {
+            ...currentState.settings,
+            ...config.settings,
+          } : currentState.settings;
+          
+          const newBookmarks = config.bookmarks || currentState.bookmarks;
+          const newTodos = config.todos || currentState.todos;
+          
+          console.log('导入配置 - 合并后的设置:', newSettings);
+          console.log('导入配置 - 合并后的书签:', newBookmarks);
+          console.log('导入配置 - 合并后的待办:', newTodos);
+          
+          // 一次性更新所有状态
+          set({ 
+            settings: newSettings,
+            bookmarks: newBookmarks,
+            todos: newTodos,
+          });
+          
+          // 强制触发 persist 保存
+          setTimeout(() => {
+            const savedState = get();
+            console.log('保存后的状态:', savedState);
+          }, 100);
           
           return true;
-        } catch {
+        } catch (err) {
+          console.error('导入配置失败:', err);
           return false;
         }
       },

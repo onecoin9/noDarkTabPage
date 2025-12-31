@@ -73,24 +73,30 @@ export function useCloudSync() {
     setError(null);
 
     try {
+      const uploadData = {
+        user_id: user.id,
+        bookmarks,
+        settings,
+        todos,
+        updated_at: new Date().toISOString(),
+      };
+      
+      console.log('上传到云端的数据:', uploadData);
+      
       const { error } = await supabase
         .from('user_settings')
-        .upsert({
-          user_id: user.id,
-          bookmarks,
-          settings,
-          todos,
-          updated_at: new Date().toISOString(),
-        }, {
+        .upsert(uploadData, {
           onConflict: 'user_id',
         });
 
       if (error) throw error;
 
+      console.log('上传成功');
       setSyncStatus('success');
       setLastSynced(new Date().toISOString());
       setTimeout(() => setSyncStatus('idle'), 2000);
     } catch (err) {
+      console.error('上传失败:', err);
       setSyncStatus('error');
       setError(err instanceof Error ? err.message : '同步失败');
     }
@@ -113,25 +119,38 @@ export function useCloudSync() {
       if (error && error.code !== 'PGRST116') throw error;
 
       if (data) {
+        console.log('从云端下载的数据:', data);
+        
         const config = {
           bookmarks: data.bookmarks,
           settings: data.settings,
           todos: data.todos,
         };
-        importConfig(JSON.stringify(config));
+        
+        console.log('准备导入的配置:', config);
+        
+        const success = importConfig(JSON.stringify(config));
+        
+        if (!success) {
+          throw new Error('导入配置失败');
+        }
+        
         setLastSynced(data.updated_at);
+        setSyncStatus('success');
         
         // 自动刷新页面以应用所有设置
-        setSyncStatus('success');
         setTimeout(() => {
+          console.log('刷新页面以应用设置');
           window.location.reload();
         }, 1000);
         return;
+      } else {
+        // 没有找到云端数据
+        setError('云端没有找到数据，请先在其他设备上传');
+        setSyncStatus('error');
       }
-
-      setSyncStatus('success');
-      setTimeout(() => setSyncStatus('idle'), 2000);
     } catch (err) {
+      console.error('下载失败:', err);
       setSyncStatus('error');
       setError(err instanceof Error ? err.message : '下载失败');
     }
