@@ -8,14 +8,16 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
+  DragOverlay,
+  MeasuringStrategy,
 } from '@dnd-kit/core';
-import type { DragEndEvent } from '@dnd-kit/core';
+import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
   useSortable,
-  rectSortingStrategy,
+  rectSwappingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useAppStore } from '../stores/useAppStore';
@@ -74,32 +76,36 @@ function SortableBookmarkItem({ bookmark, onEdit }: Omit<BookmarkItemProps, 'onD
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: bookmark.id });
+  } = useSortable({ 
+    id: bookmark.id,
+    transition: {
+      duration: 200,
+      easing: 'cubic-bezier(0.25, 1, 0.5, 1)',
+    },
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     zIndex: isDragging ? 50 : undefined,
-    opacity: isDragging ? 0.8 : 1,
+    opacity: isDragging ? 0.5 : 1,
   };
 
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className="relative group"
+      className={`relative group ${isDragging ? 'scale-105' : ''}`}
       onMouseEnter={() => setShowSettings(true)}
       onMouseLeave={() => setShowSettings(false)}
     >
-      {/* 拖拽手柄 - 编辑模式下显示 */}
+      {/* 拖拽手柄 - 编辑模式下整个卡片可拖拽 */}
       {isEditMode && (
         <div
           {...attributes}
           {...listeners}
-          className="absolute -left-1 top-1/2 -translate-y-1/2 w-6 h-10 flex items-center justify-center cursor-grab active:cursor-grabbing text-white/40 hover:text-white/70 z-10"
-        >
-          <GripVertical size={16} />
-        </div>
+          className="absolute inset-0 cursor-grab active:cursor-grabbing z-10"
+        />
       )}
       
       <motion.a
@@ -112,6 +118,13 @@ function SortableBookmarkItem({ bookmark, onEdit }: Omit<BookmarkItemProps, 'onD
           isEditMode ? 'border-indigo-500/50 ring-1 ring-indigo-500/30' : 'border-white/20'
         }`}
       >
+        {/* 编辑模式下显示拖拽图标 */}
+        {isEditMode && (
+          <div className="absolute top-1 left-1/2 -translate-x-1/2 text-white/30">
+            <GripVertical size={14} />
+          </div>
+        )}
+        
         {bookmark.icon.startsWith('http') ? (
           <img src={bookmark.icon} alt={bookmark.title} className="w-10 h-10 rounded-lg" />
         ) : (
@@ -121,7 +134,7 @@ function SortableBookmarkItem({ bookmark, onEdit }: Omit<BookmarkItemProps, 'onD
         
         {/* 设置图标 - 融入卡片右下角 */}
         <AnimatePresence>
-          {showSettings && (
+          {showSettings && !isEditMode && (
             <motion.button
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -131,13 +144,27 @@ function SortableBookmarkItem({ bookmark, onEdit }: Omit<BookmarkItemProps, 'onD
                 e.stopPropagation();
                 onEdit(bookmark);
               }}
-              className="absolute bottom-2 right-2 text-white/40 hover:text-white/80 transition-colors"
+              className="absolute bottom-2 right-2 text-white/40 hover:text-white/80 transition-colors z-20"
             >
               <Settings size={14} />
             </motion.button>
           )}
         </AnimatePresence>
       </motion.a>
+    </div>
+  );
+}
+
+// 拖拽时的预览组件
+function DragOverlayItem({ bookmark }: { bookmark: Bookmark }) {
+  return (
+    <div className="flex flex-col items-center gap-2 p-5 bg-white/25 backdrop-blur-md rounded-2xl border border-indigo-500 text-white shadow-2xl scale-105">
+      {bookmark.icon.startsWith('http') ? (
+        <img src={bookmark.icon} alt={bookmark.title} className="w-10 h-10 rounded-lg" />
+      ) : (
+        <span className="text-4xl">{bookmark.icon}</span>
+      )}
+      <span className="text-sm font-medium text-center truncate w-full">{bookmark.title}</span>
     </div>
   );
 }
@@ -359,11 +386,13 @@ export function BookmarkGrid() {
   const reorderBookmarks = useAppStore((s) => s.reorderBookmarks);
   const [editingBookmark, setEditingBookmark] = useState<Bookmark | null>(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const { isEditMode } = useEditMode();
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8,
+        distance: 5,
       },
     }),
     useSensor(KeyboardSensor, {
@@ -371,8 +400,13 @@ export function BookmarkGrid() {
     })
   );
 
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
+    setActiveId(null);
     
     if (over && active.id !== over.id) {
       const oldIndex = bookmarks.findIndex((b) => b.id === active.id);
@@ -392,6 +426,8 @@ export function BookmarkGrid() {
     setIsAddingNew(false);
   };
 
+  const activeBookmark = activeId ? bookmarks.find(b => b.id === activeId) : null;
+
   return (
     <>
       <motion.div
@@ -403,9 +439,15 @@ export function BookmarkGrid() {
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
+          onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
+          measuring={{
+            droppable: {
+              strategy: MeasuringStrategy.Always,
+            },
+          }}
         >
-          <SortableContext items={bookmarks.map(b => b.id)} strategy={rectSortingStrategy}>
+          <SortableContext items={bookmarks.map(b => b.id)} strategy={rectSwappingStrategy}>
             <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-4">
               {bookmarks.map((bookmark) => (
                 <SortableBookmarkItem
@@ -428,7 +470,23 @@ export function BookmarkGrid() {
               </motion.button>
             </div>
           </SortableContext>
+          
+          {/* 拖拽预览 */}
+          <DragOverlay>
+            {activeBookmark && <DragOverlayItem bookmark={activeBookmark} />}
+          </DragOverlay>
         </DndContext>
+        
+        {/* 编辑模式提示 */}
+        {isEditMode && (
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center text-white/50 text-sm mt-4"
+          >
+            拖拽书签可调整位置，点击右下角 ✓ 完成编辑
+          </motion.p>
+        )}
       </motion.div>
 
       {/* 编辑弹窗 */}
