@@ -70,6 +70,11 @@ export interface AppSettings {
   searchEngine: SearchEngine;
   showSearchSuggestions: boolean;
   
+  // 搜索框样式
+  searchBoxOpacity: number;
+  searchBoxColor: string;
+  searchBoxRadius: number;
+  
   // 外观
   background: BackgroundConfig;
   customCss: string;

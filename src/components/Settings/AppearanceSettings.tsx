@@ -1,9 +1,21 @@
 import { useAppStore } from '../../stores/useAppStore';
 import type { SearchEngine, BookmarkDisplayMode } from '../../types';
+import { Search, Grid3X3 } from 'lucide-react';
+
+const colorPresets = [
+  '#000000', '#ffffff', '#dc2626', '#f97316', '#3b82f6', '#22c55e', '#8b5cf6', '#ec4899'
+];
 
 export function AppearanceSettings() {
   const settings = useAppStore((s) => s.settings);
   const updateSettings = useAppStore((s) => s.updateSettings);
+
+  const getRadiusLabel = (radius: number) => {
+    if (radius === 0) return '直角';
+    if (radius < 16) return '小圆角';
+    if (radius < 9999) return '圆角';
+    return '全圆角';
+  };
 
   return (
     <div className="space-y-8">
@@ -26,6 +38,85 @@ export function AppearanceSettings() {
               {engine === 'duckduckgo' && 'DuckDuckGo'}
             </button>
           ))}
+        </div>
+      </section>
+
+      <section>
+        <h3 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
+          <Search size={20} />
+          搜索框样式
+        </h3>
+        
+        <div className="space-y-6">
+          {/* 不透明度 */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-slate-400 text-sm">搜索框不透明度</label>
+              <span className="text-indigo-400 font-medium">{settings.searchBoxOpacity}%</span>
+            </div>
+            <input
+              type="range"
+              min="5"
+              max="100"
+              value={settings.searchBoxOpacity}
+              onChange={(e) => updateSettings({ searchBoxOpacity: Number(e.target.value) })}
+              className="w-full"
+            />
+            <div className="flex justify-between text-xs text-slate-500 mt-1">
+              <span>5%</span>
+              <span>透明</span>
+              <span>清晰</span>
+              <span>100%</span>
+            </div>
+          </div>
+
+          {/* 颜色 */}
+          <div>
+            <label className="text-slate-400 text-sm mb-3 block">搜索框颜色</label>
+            <div className="flex gap-2 flex-wrap">
+              {colorPresets.map((color) => (
+                <button
+                  key={color}
+                  onClick={() => updateSettings({ searchBoxColor: color })}
+                  className={`w-10 h-10 rounded-lg border-2 transition-all ${
+                    settings.searchBoxColor === color
+                      ? 'border-white scale-110'
+                      : 'border-transparent hover:scale-105'
+                  }`}
+                  style={{ backgroundColor: color }}
+                >
+                  {settings.searchBoxColor === color && (
+                    <span className={`text-lg ${color === '#ffffff' || color === '#f97316' ? 'text-black' : 'text-white'}`}>✓</span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 圆角 */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-slate-400 text-sm flex items-center gap-2">
+                <Grid3X3 size={16} />
+                搜索框圆角
+              </label>
+              <span className="text-indigo-400 font-medium">{getRadiusLabel(settings.searchBoxRadius)}</span>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="9999"
+              step="1"
+              value={settings.searchBoxRadius}
+              onChange={(e) => updateSettings({ searchBoxRadius: Number(e.target.value) })}
+              className="w-full"
+            />
+            <div className="flex justify-between text-xs text-slate-500 mt-1">
+              <span>直角</span>
+              <span>圆角</span>
+              <span>全圆</span>
+            </div>
+          </div>
         </div>
       </section>
 

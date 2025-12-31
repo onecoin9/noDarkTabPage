@@ -27,6 +27,9 @@ const defaultBookmarks: Bookmark[] = [
 const defaultSettings: AppSettings = {
   searchEngine: 'google',
   showSearchSuggestions: true,
+  searchBoxOpacity: 95,
+  searchBoxColor: '#ffffff',
+  searchBoxRadius: 9999,
   background: {
     type: 'gradient',
     value: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
