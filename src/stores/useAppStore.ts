@@ -80,6 +80,9 @@ const defaultSettings: AppSettings = {
   calendarSize: 240,
   weatherCity: '北京',
   weatherUnit: 'celsius',
+  webdavUrl: '',
+  webdavUsername: '',
+  webdavPassword: '',
 };
 
 // 默认番茄钟

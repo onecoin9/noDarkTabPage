@@ -165,6 +165,11 @@ export interface AppSettings {
   // 天气
   weatherCity: string;
   weatherUnit: 'celsius' | 'fahrenheit';
+  
+  // WebDAV 书签同步
+  webdavUrl?: string;
+  webdavUsername?: string;
+  webdavPassword?: string;
 }
 
 // 设置页面标签

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Folder, ChevronRight, ChevronDown, X, Plus, ExternalLink } from 'lucide-react';
+import { Folder, ChevronRight, ChevronDown, X, Plus, ExternalLink, Settings as SettingsIcon, RefreshCw } from 'lucide-react';
+import { useAppStore } from '../stores/useAppStore';
 
 interface BookmarkPanelProps {
   isOpen: boolean;
@@ -15,30 +16,142 @@ interface ChromeBookmark {
   dateAdded?: number;
 }
 
+// 解析 XBEL 格式
+function parseXBEL(xmlText: string): ChromeBookmark[] {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(xmlText, 'text/xml');
+  
+  const parseNode = (node: Element, idCounter: { value: number }): ChromeBookmark | null => {
+    if (node.tagName === 'bookmark') {
+      const href = node.getAttribute('href');
+      const title = node.querySelector('title')?.textContent || href || '未命名';
+      return {
+        id: `bookmark-${idCounter.value++}`,
+        title,
+        url: href || undefined,
+      };
+    }
+    
+    if (node.tagName === 'folder') {
+      const title = node.querySelector(':scope > title')?.textContent || '未命名文件夹';
+      const children: ChromeBookmark[] = [];
+      
+      Array.from(node.children).forEach(child => {
+        if (child.tagName === 'bookmark' || child.tagName === 'folder') {
+          const parsed = parseNode(child, idCounter);
+          if (parsed) children.push(parsed);
+        }
+      });
+      
+      return {
+        id: `folder-${idCounter.value++}`,
+        title,
+        children,
+      };
+    }
+    
+    return null;
+  };
+  
+  const idCounter = { value: 0 };
+  const root = doc.querySelector('xbel');
+  if (!root) return [];
+  
+  const bookmarks: ChromeBookmark[] = [];
+  Array.from(root.children).forEach(child => {
+    if (child.tagName === 'bookmark' || child.tagName === 'folder') {
+      const parsed = parseNode(child, idCounter);
+      if (parsed) bookmarks.push(parsed);
+    }
+  });
+  
+  return bookmarks;
+}
+
 export function BookmarkPanel({ isOpen, onClose }: BookmarkPanelProps) {
+  const settings = useAppStore((s) => s.settings);
+  const updateSettings = useAppStore((s) => s.updateSettings);
   const [bookmarks, setBookmarks] = useState<ChromeBookmark[]>([]);
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [isExtension, setIsExtension] = useState(false);
+  const [mode, setMode] = useState<'extension' | 'webdav'>('extension');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
     // 检查是否在扩展环境中
     if (typeof chrome !== 'undefined' && chrome.bookmarks) {
       setIsExtension(true);
-      loadChromeBookmarks();
+      setMode('extension');
+    } else if (settings.webdavUrl) {
+      setMode('webdav');
     }
-  }, [isOpen]);
+  }, [settings.webdavUrl]);
+
+  useEffect(() => {
+    if (isOpen) {
+      if (mode === 'extension' && isExtension) {
+        loadChromeBookmarks();
+      } else if (mode === 'webdav' && settings.webdavUrl) {
+        loadWebDAVBookmarks();
+      }
+    }
+  }, [isOpen, mode]);
 
   const loadChromeBookmarks = async () => {
     try {
+      setLoading(true);
+      setError(null);
       const tree = await chrome.bookmarks.getTree();
       if (tree && tree[0] && tree[0].children) {
         setBookmarks(tree[0].children);
-        // 默认展开第一层
         const firstLevelIds = tree[0].children.map((b: ChromeBookmark) => b.id);
         setExpandedFolders(new Set(firstLevelIds));
       }
-    } catch (error) {
-      console.error('读取浏览器书签失败:', error);
+    } catch (err) {
+      setError('读取浏览器书签失败');
+      console.error('读取浏览器书签失败:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadWebDAVBookmarks = async () => {
+    if (!settings.webdavUrl) return;
+    
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const headers: HeadersInit = {
+        'Accept': 'application/xml, text/xml',
+      };
+      
+      // 如果有认证信息
+      if (settings.webdavUsername && settings.webdavPassword) {
+        const auth = btoa(`${settings.webdavUsername}:${settings.webdavPassword}`);
+        headers['Authorization'] = `Basic ${auth}`;
+      }
+      
+      const response = await fetch(settings.webdavUrl, { headers });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const xmlText = await response.text();
+      const parsed = parseXBEL(xmlText);
+      setBookmarks(parsed);
+      
+      // 默认展开第一层
+      const firstLevelIds = parsed.map(b => b.id);
+      setExpandedFolders(new Set(firstLevelIds));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '加载书签失败');
+      console.error('加载 WebDAV 书签失败:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -174,34 +287,157 @@ export function BookmarkPanel({ isOpen, onClose }: BookmarkPanelProps) {
               <div className="flex items-center gap-2">
                 <Folder size={20} className="text-indigo-400" />
                 <h2 className="text-lg font-semibold text-white">
-                  {isExtension ? '浏览器书签' : '书签文件夹'}
+                  {mode === 'extension' ? '浏览器书签' : 'WebDAV 书签'}
                 </h2>
               </div>
-              <button
-                onClick={onClose}
-                className="p-2 hover:bg-slate-700/50 rounded-lg text-slate-400 hover:text-white transition-colors"
-              >
-                <X size={20} />
-              </button>
+              <div className="flex items-center gap-2">
+                {mode === 'webdav' && (
+                  <button
+                    onClick={loadWebDAVBookmarks}
+                    disabled={loading}
+                    className="p-2 hover:bg-slate-700/50 rounded-lg text-slate-400 hover:text-white transition-colors disabled:opacity-50"
+                    title="刷新"
+                  >
+                    <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
+                  </button>
+                )}
+                <button
+                  onClick={() => setShowSettings(!showSettings)}
+                  className="p-2 hover:bg-slate-700/50 rounded-lg text-slate-400 hover:text-white transition-colors"
+                  title="设置"
+                >
+                  <SettingsIcon size={18} />
+                </button>
+                <button
+                  onClick={onClose}
+                  className="p-2 hover:bg-slate-700/50 rounded-lg text-slate-400 hover:text-white transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              </div>
             </div>
+
+            {/* 设置面板 */}
+            <AnimatePresence>
+              {showSettings && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="overflow-hidden border-b border-slate-700/50"
+                >
+                  <div className="p-4 space-y-3 bg-slate-800/50">
+                    <div>
+                      <label className="text-slate-400 text-xs mb-1 block">书签来源</label>
+                      <div className="flex gap-2">
+                        {isExtension && (
+                          <button
+                            onClick={() => setMode('extension')}
+                            className={`flex-1 px-3 py-2 rounded-lg text-sm transition-colors ${
+                              mode === 'extension'
+                                ? 'bg-indigo-500 text-white'
+                                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                            }`}
+                          >
+                            浏览器
+                          </button>
+                        )}
+                        <button
+                          onClick={() => setMode('webdav')}
+                          className={`flex-1 px-3 py-2 rounded-lg text-sm transition-colors ${
+                            mode === 'webdav'
+                              ? 'bg-indigo-500 text-white'
+                              : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                          }`}
+                        >
+                          WebDAV
+                        </button>
+                      </div>
+                    </div>
+                    
+                    {mode === 'webdav' && (
+                      <>
+                        <div>
+                          <label className="text-slate-400 text-xs mb-1 block">XBEL 文件 URL</label>
+                          <input
+                            type="text"
+                            value={settings.webdavUrl || ''}
+                            onChange={(e) => updateSettings({ webdavUrl: e.target.value })}
+                            placeholder="https://dav.example.com/bookmarks.xbel"
+                            className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-xs focus:outline-none focus:border-indigo-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-slate-400 text-xs mb-1 block">用户名（可选）</label>
+                          <input
+                            type="text"
+                            value={settings.webdavUsername || ''}
+                            onChange={(e) => updateSettings({ webdavUsername: e.target.value })}
+                            placeholder="username"
+                            className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-xs focus:outline-none focus:border-indigo-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-slate-400 text-xs mb-1 block">密码（可选）</label>
+                          <input
+                            type="password"
+                            value={settings.webdavPassword || ''}
+                            onChange={(e) => updateSettings({ webdavPassword: e.target.value })}
+                            placeholder="password"
+                            className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-xs focus:outline-none focus:border-indigo-500"
+                          />
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* 书签列表 */}
             <div className="flex-1 overflow-y-auto p-3 space-y-1">
-              {!isExtension ? (
+              {error ? (
+                <div className="text-center text-red-400 py-8 px-4">
+                  <p className="font-medium mb-2">加载失败</p>
+                  <p className="text-sm">{error}</p>
+                  <button
+                    onClick={() => mode === 'webdav' ? loadWebDAVBookmarks() : loadChromeBookmarks()}
+                    className="mt-3 px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm transition-colors"
+                  >
+                    重试
+                  </button>
+                </div>
+              ) : loading ? (
+                <div className="text-center text-slate-400 py-8">
+                  <RefreshCw size={32} className="mx-auto mb-2 animate-spin" />
+                  <p>加载书签中...</p>
+                </div>
+              ) : !isExtension && mode === 'extension' ? (
                 <div className="text-center text-slate-400 py-8 px-4">
                   <Folder size={48} className="mx-auto mb-3 opacity-50" />
                   <p className="font-medium mb-2">需要浏览器扩展权限</p>
-                  <p className="text-sm leading-relaxed">
-                    此功能需要作为浏览器扩展运行才能访问浏览器书签。
+                  <p className="text-sm leading-relaxed mb-3">
+                    浏览器书签功能需要作为扩展运行。
                   </p>
-                  <p className="text-sm mt-2 text-slate-500">
-                    请将项目安装为 Chrome/Edge 扩展
+                  <button
+                    onClick={() => setMode('webdav')}
+                    className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 rounded-lg text-sm transition-colors"
+                  >
+                    使用 WebDAV 模式
+                  </button>
+                </div>
+              ) : mode === 'webdav' && !settings.webdavUrl ? (
+                <div className="text-center text-slate-400 py-8 px-4">
+                  <Folder size={48} className="mx-auto mb-3 opacity-50" />
+                  <p className="font-medium mb-2">未配置 WebDAV</p>
+                  <p className="text-sm leading-relaxed mb-3">
+                    请点击右上角设置按钮配置 XBEL 文件地址
                   </p>
                 </div>
               ) : bookmarks.length === 0 ? (
                 <div className="text-center text-slate-400 py-8">
                   <Folder size={48} className="mx-auto mb-2 opacity-50" />
-                  <p>加载书签中...</p>
+                  <p>没有书签</p>
                 </div>
               ) : (
                 bookmarks.map(bookmark => renderBookmark(bookmark, 0))
@@ -210,10 +446,10 @@ export function BookmarkPanel({ isOpen, onClose }: BookmarkPanelProps) {
 
             {/* 底部提示 */}
             <div className="p-4 border-t border-slate-700/50 text-xs text-slate-500">
-              {isExtension ? (
+              {mode === 'extension' ? (
                 <p>💡 点击文件夹右侧的 + 可打开该文件夹内所有书签</p>
               ) : (
-                <p>💡 在网页模式下无法访问浏览器书签</p>
+                <p>💡 支持 Firefox/Chrome 导出的 XBEL 格式书签文件</p>
               )}
             </div>
           </motion.div>
