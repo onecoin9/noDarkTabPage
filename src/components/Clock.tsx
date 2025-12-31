@@ -1,22 +1,24 @@
 import { motion } from 'framer-motion';
 import { useTime } from '../hooks/useTime';
 import { useAppStore } from '../stores/useAppStore';
-import { ResizableWrapper } from './ResizableWrapper';
+import { EditableWidget } from './EditableWidget';
 
 export function Clock() {
   const settings = useAppStore((s) => s.settings);
   const updateSettings = useAppStore((s) => s.updateSettings);
   const { time, date } = useTime(settings.showSeconds, settings.timeFormat);
   const fontSize = settings.clockFontSize || 80;
+  const position = settings.clockPosition || { preset: 'center', offsetX: 0, offsetY: -80 };
 
   return (
-    <ResizableWrapper
-      value={fontSize}
-      min={40}
-      max={200}
-      onChange={(v) => updateSettings({ clockFontSize: v })}
-      sensitivity={0.8}
-      label="px"
+    <EditableWidget
+      name="时钟"
+      position={position}
+      onPositionChange={(pos) => updateSettings({ clockPosition: pos })}
+      size={fontSize}
+      minSize={40}
+      maxSize={200}
+      onSizeChange={(size) => updateSettings({ clockFontSize: size })}
     >
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -39,6 +41,6 @@ export function Clock() {
           </div>
         )}
       </motion.div>
-    </ResizableWrapper>
+    </EditableWidget>
   );
 }

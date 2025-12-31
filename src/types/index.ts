@@ -25,11 +25,21 @@ export type SearchEngine = 'google' | 'baidu' | 'bing' | 'duckduckgo';
 // 书签显示模式
 export type BookmarkDisplayMode = 'grid' | 'list' | 'icon';
 
-// 书签位置
-export type BookmarkPosition = 
+// 位置类型
+export type PositionPreset = 
   | 'top-left' | 'top-center' | 'top-right'
   | 'center-left' | 'center' | 'center-right'
   | 'bottom-left' | 'bottom-center' | 'bottom-right';
+
+// 组件位置配置（支持9宫格 + 微调）
+export interface ComponentPosition {
+  preset: PositionPreset;
+  offsetX: number; // 水平偏移 px
+  offsetY: number; // 垂直偏移 px
+}
+
+// 书签位置（保持兼容）
+export type BookmarkPosition = PositionPreset;
 
 // 时间格式
 export type TimeFormat = '12h' | '24h';
@@ -83,6 +93,10 @@ export interface AppSettings {
   
   // 时间字体大小
   clockFontSize: number;
+  
+  // 组件位置
+  clockPosition: ComponentPosition;
+  searchPosition: ComponentPosition;
   
   // 外观
   background: BackgroundConfig;

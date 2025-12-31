@@ -6,6 +6,7 @@ export { Background } from './Background';
 export { CustomCss } from './CustomCss';
 export { EditModeButton } from './EditModeButton';
 export { ResizableWrapper } from './ResizableWrapper';
+export { EditableWidget } from './EditableWidget';
 export { SettingsModal } from './Settings/SettingsModal';
 export { 
   Pomodoro, 

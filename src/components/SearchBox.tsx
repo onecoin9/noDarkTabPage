@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback, type KeyboardEvent } from 're
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, ChevronDown } from 'lucide-react';
 import { useAppStore } from '../stores/useAppStore';
+import { EditableWidget } from './EditableWidget';
 import type { SearchEngine } from '../types';
 
 // 星星粒子组件
@@ -116,8 +117,10 @@ export function SearchBox() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [showSparkle, setShowSparkle] = useState(false);
   const settings = useAppStore((s) => s.settings);
+  const updateSettings = useAppStore((s) => s.updateSettings);
   const setSearchEngine = useAppStore((s) => s.setSearchEngine);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const position = settings.searchPosition || { preset: 'center', offsetX: 0, offsetY: 0 };
   const selectorRef = useRef<HTMLButtonElement>(null);
   const [selectorWidth, setSelectorWidth] = useState(0);
 
@@ -171,128 +174,134 @@ export function SearchBox() {
   const textColor = isLight ? '#1f2937' : '#f3f4f6';
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.8, delay: 0.2 }}
-      className="w-full max-w-xl mx-auto"
+    <EditableWidget
+      name="搜索框"
+      position={position}
+      onPositionChange={(pos) => updateSettings({ searchPosition: pos })}
     >
-      <motion.div 
-        className="flex items-center backdrop-blur-sm px-4 py-2 shadow-lg cursor-text relative"
-        style={{
-          backgroundColor: `${bgColor}${Math.round(opacity * 255).toString(16).padStart(2, '0')}`,
-          borderRadius: `${Math.min(radius, 9999)}px`,
-        }}
-        animate={{
-          scale: isActive ? 1 : 0.95,
-          opacity: isActive ? 1 : 0.8,
-        }}
-        transition={{ duration: 0.2 }}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, delay: 0.2 }}
+        className="w-full max-w-xl"
       >
-        {/* 自定义搜索引擎选择器 */}
-        <div className="relative" ref={dropdownRef}>
+        <motion.div 
+          className="flex items-center backdrop-blur-sm px-4 py-2 shadow-lg cursor-text relative"
+          style={{
+            backgroundColor: `${bgColor}${Math.round(opacity * 255).toString(16).padStart(2, '0')}`,
+            borderRadius: `${Math.min(radius, 9999)}px`,
+          }}
+          animate={{
+            scale: isActive ? 1 : 0.95,
+            opacity: isActive ? 1 : 0.8,
+          }}
+          transition={{ duration: 0.2 }}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+        >
+          {/* 自定义搜索引擎选择器 */}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              ref={selectorRef}
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+              className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-black/10 transition-colors relative"
+              style={{ color: textColor }}
+            >
+              <motion.img 
+                key={settings.searchEngine}
+                initial={{ scale: 0.5, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.2 }}
+                src={engineIcons[settings.searchEngine]} 
+                alt={engineNames[settings.searchEngine]}
+                className="w-5 h-5"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                }}
+              />
+              <motion.span 
+                key={`name-${settings.searchEngine}`}
+                initial={{ y: -10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.2 }}
+                className="text-sm font-medium"
+              >
+                {engineNames[settings.searchEngine]}
+              </motion.span>
+              <ChevronDown size={16} className={`transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
+              
+              {/* 星星动画效果 */}
+              <SparkleEffect show={showSparkle} onComplete={handleSparkleComplete} />
+            </button>
+
+            {/* 下拉菜单 - 宽度与选择器对齐 */}
+            <AnimatePresence>
+              {dropdownOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute top-full left-0 mt-2 py-1 rounded-xl shadow-xl overflow-hidden z-50"
+                  style={{
+                    backgroundColor: bgColor,
+                    width: selectorWidth > 0 ? `${selectorWidth}px` : 'auto',
+                    minWidth: '100px',
+                  }}
+                >
+                  {engines.map((engine, index) => (
+                    <motion.button
+                      key={engine}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.03 }}
+                      onClick={() => handleSelectEngine(engine)}
+                      className={`w-full flex items-center gap-2 px-3 py-2 text-left transition-colors ${
+                        settings.searchEngine === engine 
+                          ? isLight ? 'bg-black/10' : 'bg-white/10'
+                          : isLight ? 'hover:bg-black/5' : 'hover:bg-white/5'
+                      }`}
+                      style={{ color: textColor }}
+                    >
+                      <img 
+                        src={engineIcons[engine]} 
+                        alt={engineNames[engine]}
+                        className="w-4 h-4"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                      <span className="text-sm truncate">{engineNames[engine]}</span>
+                    </motion.button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          <div className="w-px h-6 mx-2" style={{ backgroundColor: `${textColor}30` }} />
+          
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
+            placeholder="探索世界ing"
+            className="flex-1 bg-transparent text-base outline-none px-2 py-2 placeholder:opacity-50"
+            style={{ color: textColor }}
+          />
+          
           <button
-            ref={selectorRef}
-            onClick={() => setDropdownOpen(!dropdownOpen)}
-            className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-black/10 transition-colors relative"
+            onClick={handleSearch}
+            className="transition-colors p-2 rounded-lg hover:bg-black/10"
             style={{ color: textColor }}
           >
-            <motion.img 
-              key={settings.searchEngine}
-              initial={{ scale: 0.5, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.2 }}
-              src={engineIcons[settings.searchEngine]} 
-              alt={engineNames[settings.searchEngine]}
-              className="w-5 h-5"
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = 'none';
-              }}
-            />
-            <motion.span 
-              key={`name-${settings.searchEngine}`}
-              initial={{ y: -10, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.2 }}
-              className="text-sm font-medium"
-            >
-              {engineNames[settings.searchEngine]}
-            </motion.span>
-            <ChevronDown size={16} className={`transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
-            
-            {/* 星星动画效果 */}
-            <SparkleEffect show={showSparkle} onComplete={handleSparkleComplete} />
+            <Search size={20} />
           </button>
-
-          {/* 下拉菜单 - 宽度与选择器对齐 */}
-          <AnimatePresence>
-            {dropdownOpen && (
-              <motion.div
-                initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                transition={{ duration: 0.15 }}
-                className="absolute top-full left-0 mt-2 py-1 rounded-xl shadow-xl overflow-hidden z-50"
-                style={{
-                  backgroundColor: bgColor,
-                  width: selectorWidth > 0 ? `${selectorWidth}px` : 'auto',
-                  minWidth: '100px',
-                }}
-              >
-                {engines.map((engine, index) => (
-                  <motion.button
-                    key={engine}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.03 }}
-                    onClick={() => handleSelectEngine(engine)}
-                    className={`w-full flex items-center gap-2 px-3 py-2 text-left transition-colors ${
-                      settings.searchEngine === engine 
-                        ? isLight ? 'bg-black/10' : 'bg-white/10'
-                        : isLight ? 'hover:bg-black/5' : 'hover:bg-white/5'
-                    }`}
-                    style={{ color: textColor }}
-                  >
-                    <img 
-                      src={engineIcons[engine]} 
-                      alt={engineNames[engine]}
-                      className="w-4 h-4"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = 'none';
-                      }}
-                    />
-                    <span className="text-sm truncate">{engineNames[engine]}</span>
-                  </motion.button>
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        <div className="w-px h-6 mx-2" style={{ backgroundColor: `${textColor}30` }} />
-        
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={handleKeyDown}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
-          placeholder="探索世界ing"
-          className="flex-1 bg-transparent text-base outline-none px-2 py-2 placeholder:opacity-50"
-          style={{ color: textColor }}
-        />
-        
-        <button
-          onClick={handleSearch}
-          className="transition-colors p-2 rounded-lg hover:bg-black/10"
-          style={{ color: textColor }}
-        >
-          <Search size={20} />
-        </button>
+        </motion.div>
       </motion.div>
-    </motion.div>
+    </EditableWidget>
   );
 }

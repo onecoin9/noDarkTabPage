@@ -31,6 +31,8 @@ const defaultSettings: AppSettings = {
   searchBoxColor: '#ffffff',
   searchBoxRadius: 9999,
   clockFontSize: 80,
+  clockPosition: { preset: 'center', offsetX: 0, offsetY: -80 },
+  searchPosition: { preset: 'center', offsetX: 0, offsetY: 0 },
   background: {
     type: 'gradient',
     value: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',

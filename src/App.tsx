@@ -17,11 +17,11 @@ import {
   CalendarWidget,
 } from './components';
 import { useAppStore } from './stores/useAppStore';
-import type { BookmarkPosition } from './types';
+import type { PositionPreset } from './types';
 
 // 根据位置获取样式类
-function getPositionClasses(position: BookmarkPosition): string {
-  const positionMap: Record<BookmarkPosition, string> = {
+function getPositionClasses(position: PositionPreset): string {
+  const positionMap: Record<PositionPreset, string> = {
     'top-left': 'items-start justify-start',
     'top-center': 'items-start justify-center',
     'top-right': 'items-start justify-end',
@@ -41,7 +41,7 @@ function App() {
   const bookmarkPosition = settings.bookmarkPosition || 'center';
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 md:p-10 relative">
+    <div className="min-h-screen relative overflow-hidden">
       <Background />
       <CustomCss />
       <SettingsButton />
@@ -89,14 +89,18 @@ function App() {
         )}
       </div>
 
-      {/* 主内容区域 - 时钟和搜索框始终居中 */}
-      <div className="fixed inset-0 flex flex-col items-center justify-center z-10 pointer-events-none">
-        <div className="pointer-events-auto flex flex-col items-center gap-6">
-          <Clock />
-          {settings.showQuote && <DailyQuote />}
-          <SearchBox />
+      {/* 时钟 - 自己管理位置 */}
+      <Clock />
+      
+      {/* 每日一言 */}
+      {settings.showQuote && (
+        <div className="fixed top-1/2 left-1/2 -translate-x-1/2 translate-y-8 z-10">
+          <DailyQuote />
         </div>
-      </div>
+      )}
+      
+      {/* 搜索框 - 自己管理位置 */}
+      <SearchBox />
 
       {/* 书签区域 - 可配置位置 */}
       <div className={`fixed inset-0 flex p-8 md:p-16 z-10 pointer-events-none ${getPositionClasses(bookmarkPosition)}`}>
