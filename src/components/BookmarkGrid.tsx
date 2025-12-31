@@ -457,17 +457,19 @@ export function BookmarkGrid() {
                 />
               ))}
               
-              {/* 添加按钮 - 始终显示 */}
-              <motion.button
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                whileHover={{ scale: 1.05 }}
-                onClick={() => setIsAddingNew(true)}
-                className="flex flex-col items-center justify-center gap-2 p-5 bg-white/5 backdrop-blur-sm rounded-2xl border-2 border-dashed border-white/20 text-white/40 hover:bg-white/10 hover:border-white/40 hover:text-white/70 transition-all"
-              >
-                <Plus size={28} />
-                <span className="text-xs">添加</span>
-              </motion.button>
+              {/* 添加按钮 - 仅编辑模式下显示 */}
+              {isEditMode && (
+                <motion.button
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  whileHover={{ scale: 1.05 }}
+                  onClick={() => setIsAddingNew(true)}
+                  className="flex flex-col items-center justify-center gap-2 p-5 bg-white/5 backdrop-blur-sm rounded-2xl border-2 border-dashed border-white/20 text-white/40 hover:bg-white/10 hover:border-white/40 hover:text-white/70 transition-all"
+                >
+                  <Plus size={28} />
+                  <span className="text-xs">添加</span>
+                </motion.button>
+              )}
             </div>
           </SortableContext>
           
