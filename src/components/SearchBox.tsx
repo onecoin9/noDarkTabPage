@@ -183,10 +183,10 @@ export function SearchBox() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, delay: 0.2 }}
-        className="w-full max-w-xl"
+        className="w-full max-w-xl px-4 md:px-0"
       >
         <motion.div 
-          className="flex items-center backdrop-blur-sm px-4 py-2 shadow-lg cursor-text relative"
+          className="flex items-center backdrop-blur-sm px-3 md:px-4 py-1.5 md:py-2 shadow-lg cursor-text relative"
           style={{
             backgroundColor: `${bgColor}${Math.round(opacity * 255).toString(16).padStart(2, '0')}`,
             borderRadius: `${Math.min(radius, 9999)}px`,
@@ -204,7 +204,7 @@ export function SearchBox() {
             <button
               ref={selectorRef}
               onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-black/10 transition-colors relative"
+              className="flex items-center gap-1.5 md:gap-2 px-1.5 md:px-2 py-1 rounded-lg hover:bg-black/10 transition-colors relative"
               style={{ color: textColor }}
             >
               <motion.img 
@@ -214,7 +214,7 @@ export function SearchBox() {
                 transition={{ duration: 0.2 }}
                 src={engineIcons[settings.searchEngine]} 
                 alt={engineNames[settings.searchEngine]}
-                className="w-5 h-5"
+                className="w-4 h-4 md:w-5 md:h-5"
                 onError={(e) => {
                   (e.target as HTMLImageElement).style.display = 'none';
                 }}
@@ -224,11 +224,11 @@ export function SearchBox() {
                 initial={{ y: -10, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.2 }}
-                className="text-sm font-medium"
+                className="text-xs md:text-sm font-medium hidden sm:inline"
               >
                 {engineNames[settings.searchEngine]}
               </motion.span>
-              <ChevronDown size={16} className={`transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown size={14} className={`transition-transform ${dropdownOpen ? 'rotate-180' : ''} md:w-4 md:h-4`} />
               
               {/* 星星动画效果 */}
               <SparkleEffect show={showSparkle} onComplete={handleSparkleComplete} />
@@ -279,7 +279,7 @@ export function SearchBox() {
             </AnimatePresence>
           </div>
 
-          <div className="w-px h-6 mx-2" style={{ backgroundColor: `${textColor}30` }} />
+          <div className="w-px h-5 md:h-6 mx-1.5 md:mx-2" style={{ backgroundColor: `${textColor}30` }} />
           
           <input
             type="text"
@@ -289,16 +289,16 @@ export function SearchBox() {
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             placeholder="探索世界ing"
-            className="flex-1 bg-transparent text-base outline-none px-2 py-2 placeholder:opacity-50"
+            className="flex-1 bg-transparent text-sm md:text-base outline-none px-1 md:px-2 py-1.5 md:py-2 placeholder:opacity-50"
             style={{ color: textColor }}
           />
           
           <button
             onClick={handleSearch}
-            className="transition-colors p-2 rounded-lg hover:bg-black/10"
+            className="transition-colors p-1.5 md:p-2 rounded-lg hover:bg-black/10"
             style={{ color: textColor }}
           >
-            <Search size={20} />
+            <Search size={18} className="md:w-5 md:h-5" />
           </button>
         </motion.div>
       </motion.div>

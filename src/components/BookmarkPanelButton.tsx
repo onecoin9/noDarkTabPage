@@ -14,10 +14,10 @@ export function BookmarkPanelButton() {
         transition={{ duration: 0.5, delay: 0.7 }}
         whileHover={{ scale: 1.05 }}
         onClick={() => setIsPanelOpen(true)}
-        className="fixed left-5 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/30 transition-colors z-30 shadow-lg"
+        className="fixed left-3 md:left-5 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-full bg-white/20 backdrop-blur-sm border border-white/30 text-white hover:bg-white/30 transition-colors z-30 shadow-lg"
         title="书签文件夹"
       >
-        <Folder size={22} />
+        <Folder size={18} className="md:w-[22px] md:h-[22px]" />
       </motion.button>
 
       <BookmarkPanel isOpen={isPanelOpen} onClose={() => setIsPanelOpen(false)} />

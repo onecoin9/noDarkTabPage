@@ -33,6 +33,10 @@ export function Clock() {
   const fontSize = settings.clockFontSize || 80;
   const position = settings.clockPosition || { preset: 'center', offsetX: 0, offsetY: -80 };
 
+  // 移动端自动缩小字体
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const responsiveFontSize = isMobile ? Math.min(fontSize, 48) : fontSize;
+
   return (
     <EditableWidget
       name="时钟"
@@ -52,7 +56,7 @@ export function Clock() {
         <div 
           className="tracking-tight"
           style={{ 
-            fontSize: `${fontSize}px`,
+            fontSize: `${responsiveFontSize}px`,
             fontFamily: getFontFamily(clockStyle.fontFamily),
             fontWeight: clockStyle.fontWeight,
             color: clockStyle.color,
@@ -64,9 +68,9 @@ export function Clock() {
         </div>
         {settings.showDate && (
           <div 
-            className="mt-3"
+            className="mt-2 md:mt-3"
             style={{ 
-              fontSize: `${Math.max(fontSize * 0.2, 16)}px`,
+              fontSize: `${Math.max(responsiveFontSize * 0.2, 14)}px`,
               fontFamily: getFontFamily(clockStyle.fontFamily),
               fontWeight: Math.max(clockStyle.fontWeight - 100, 100),
               color: clockStyle.color,
