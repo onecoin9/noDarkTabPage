@@ -1,43 +1,151 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Folder, ChevronRight, ChevronDown, X, Plus } from 'lucide-react';
-import { useAppStore } from '../stores/useAppStore';
-import type { Bookmark } from '../types';
+import { Folder, ChevronRight, ChevronDown, X, Plus, ExternalLink } from 'lucide-react';
 
 interface BookmarkPanelProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+interface ChromeBookmark {
+  id: string;
+  title: string;
+  url?: string;
+  children?: ChromeBookmark[];
+  dateAdded?: number;
+}
+
 export function BookmarkPanel({ isOpen, onClose }: BookmarkPanelProps) {
-  const bookmarks = useAppStore((s) => s.bookmarks);
-  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set(['未分类']));
+  const [bookmarks, setBookmarks] = useState<ChromeBookmark[]>([]);
+  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
+  const [isExtension, setIsExtension] = useState(false);
 
-  // 按分类分组书签
-  const groupedBookmarks = bookmarks.reduce((acc, bookmark) => {
-    const category = bookmark.category || '未分类';
-    if (!acc[category]) {
-      acc[category] = [];
+  useEffect(() => {
+    // 检查是否在扩展环境中
+    if (typeof chrome !== 'undefined' && chrome.bookmarks) {
+      setIsExtension(true);
+      loadChromeBookmarks();
     }
-    acc[category].push(bookmark);
-    return acc;
-  }, {} as Record<string, Bookmark[]>);
+  }, [isOpen]);
 
-  const categories = Object.keys(groupedBookmarks).sort();
+  const loadChromeBookmarks = async () => {
+    try {
+      const tree = await chrome.bookmarks.getTree();
+      if (tree && tree[0] && tree[0].children) {
+        setBookmarks(tree[0].children);
+        // 默认展开第一层
+        const firstLevelIds = tree[0].children.map((b: ChromeBookmark) => b.id);
+        setExpandedFolders(new Set(firstLevelIds));
+      }
+    } catch (error) {
+      console.error('读取浏览器书签失败:', error);
+    }
+  };
 
-  const toggleFolder = (category: string) => {
+  const toggleFolder = (id: string) => {
     const newExpanded = new Set(expandedFolders);
-    if (newExpanded.has(category)) {
-      newExpanded.delete(category);
+    if (newExpanded.has(id)) {
+      newExpanded.delete(id);
     } else {
-      newExpanded.add(category);
+      newExpanded.add(id);
     }
     setExpandedFolders(newExpanded);
   };
 
-  const openAllInFolder = (category: string) => {
-    const urls = groupedBookmarks[category].map(b => b.url);
+  const openAllInFolder = (bookmark: ChromeBookmark) => {
+    const collectUrls = (node: ChromeBookmark): string[] => {
+      if (node.url) return [node.url];
+      if (node.children) {
+        return node.children.flatMap(child => collectUrls(child));
+      }
+      return [];
+    };
+
+    const urls = collectUrls(bookmark);
     urls.forEach(url => window.open(url, '_blank'));
+  };
+
+  const renderBookmark = (bookmark: ChromeBookmark, level: number = 0) => {
+    const isFolder = !bookmark.url && bookmark.children && bookmark.children.length > 0;
+    const isExpanded = expandedFolders.has(bookmark.id);
+    const hasChildren = bookmark.children && bookmark.children.length > 0;
+
+    if (isFolder) {
+      return (
+        <div key={bookmark.id} style={{ marginLeft: `${level * 12}px` }}>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => toggleFolder(bookmark.id)}
+              className="flex-1 flex items-center gap-2 px-3 py-2 hover:bg-slate-700/50 rounded-lg text-white transition-colors group"
+            >
+              {isExpanded ? (
+                <ChevronDown size={16} className="text-slate-400 flex-shrink-0" />
+              ) : (
+                <ChevronRight size={16} className="text-slate-400 flex-shrink-0" />
+              )}
+              <Folder size={16} className="text-indigo-400 flex-shrink-0" />
+              <span className="flex-1 text-left text-sm font-medium truncate">
+                {bookmark.title || '未命名'}
+              </span>
+              <span className="text-xs text-slate-500">
+                {bookmark.children?.length || 0}
+              </span>
+            </button>
+            {hasChildren && bookmark.children!.some(c => c.url) && (
+              <button
+                onClick={() => openAllInFolder(bookmark)}
+                className="px-2 py-1 text-xs text-slate-400 hover:text-white hover:bg-slate-700/50 rounded transition-colors"
+                title="打开全部"
+              >
+                <Plus size={14} />
+              </button>
+            )}
+          </div>
+
+          <AnimatePresence>
+            {isExpanded && hasChildren && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="overflow-hidden"
+              >
+                {bookmark.children!.map(child => renderBookmark(child, level + 1))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      );
+    }
+
+    // 书签项
+    if (bookmark.url) {
+      return (
+        <a
+          key={bookmark.id}
+          href={bookmark.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 px-3 py-2 hover:bg-slate-700/50 rounded-lg text-slate-300 hover:text-white transition-colors group"
+          style={{ marginLeft: `${level * 12}px` }}
+        >
+          <img
+            src={`https://www.google.com/s2/favicons?domain=${new URL(bookmark.url).hostname}&sz=16`}
+            alt=""
+            className="w-4 h-4 flex-shrink-0"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><text y="12" font-size="12">🔗</text></svg>';
+            }}
+          />
+          <span className="flex-1 text-sm truncate">
+            {bookmark.title || bookmark.url}
+          </span>
+          <ExternalLink size={12} className="text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+        </a>
+      );
+    }
+
+    return null;
   };
 
   return (
@@ -65,7 +173,9 @@ export function BookmarkPanel({ isOpen, onClose }: BookmarkPanelProps) {
             <div className="flex items-center justify-between p-4 border-b border-slate-700/50">
               <div className="flex items-center gap-2">
                 <Folder size={20} className="text-indigo-400" />
-                <h2 className="text-lg font-semibold text-white">书签文件夹</h2>
+                <h2 className="text-lg font-semibold text-white">
+                  {isExtension ? '浏览器书签' : '书签文件夹'}
+                </h2>
               </div>
               <button
                 onClick={onClose}
@@ -76,95 +186,35 @@ export function BookmarkPanel({ isOpen, onClose }: BookmarkPanelProps) {
             </div>
 
             {/* 书签列表 */}
-            <div className="flex-1 overflow-y-auto p-3 space-y-2">
-              {categories.length === 0 ? (
+            <div className="flex-1 overflow-y-auto p-3 space-y-1">
+              {!isExtension ? (
+                <div className="text-center text-slate-400 py-8 px-4">
+                  <Folder size={48} className="mx-auto mb-3 opacity-50" />
+                  <p className="font-medium mb-2">需要浏览器扩展权限</p>
+                  <p className="text-sm leading-relaxed">
+                    此功能需要作为浏览器扩展运行才能访问浏览器书签。
+                  </p>
+                  <p className="text-sm mt-2 text-slate-500">
+                    请将项目安装为 Chrome/Edge 扩展
+                  </p>
+                </div>
+              ) : bookmarks.length === 0 ? (
                 <div className="text-center text-slate-400 py-8">
                   <Folder size={48} className="mx-auto mb-2 opacity-50" />
-                  <p>还没有书签</p>
-                  <p className="text-sm mt-1">点击右下角编辑按钮添加</p>
+                  <p>加载书签中...</p>
                 </div>
               ) : (
-                categories.map((category) => {
-                  const isExpanded = expandedFolders.has(category);
-                  const items = groupedBookmarks[category];
-
-                  return (
-                    <div key={category} className="space-y-1">
-                      {/* 文件夹标题 */}
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => toggleFolder(category)}
-                          className="flex-1 flex items-center gap-2 px-3 py-2 hover:bg-slate-700/50 rounded-lg text-white transition-colors group"
-                        >
-                          {isExpanded ? (
-                            <ChevronDown size={16} className="text-slate-400" />
-                          ) : (
-                            <ChevronRight size={16} className="text-slate-400" />
-                          )}
-                          <Folder size={16} className="text-indigo-400" />
-                          <span className="flex-1 text-left text-sm font-medium">
-                            {category}
-                          </span>
-                          <span className="text-xs text-slate-500">
-                            {items.length}
-                          </span>
-                        </button>
-                        {items.length > 1 && (
-                          <button
-                            onClick={() => openAllInFolder(category)}
-                            className="px-2 py-1 text-xs text-slate-400 hover:text-white hover:bg-slate-700/50 rounded transition-colors"
-                            title="打开全部"
-                          >
-                            <Plus size={14} />
-                          </button>
-                        )}
-                      </div>
-
-                      {/* 书签列表 */}
-                      <AnimatePresence>
-                        {isExpanded && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            className="overflow-hidden"
-                          >
-                            <div className="ml-6 space-y-1">
-                              {items.map((bookmark) => (
-                                <a
-                                  key={bookmark.id}
-                                  href={bookmark.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="flex items-center gap-2 px-3 py-2 hover:bg-slate-700/50 rounded-lg text-slate-300 hover:text-white transition-colors group"
-                                >
-                                  {bookmark.icon.startsWith('http') ? (
-                                    <img
-                                      src={bookmark.icon}
-                                      alt={bookmark.title}
-                                      className="w-4 h-4 rounded"
-                                    />
-                                  ) : (
-                                    <span className="text-base">{bookmark.icon}</span>
-                                  )}
-                                  <span className="flex-1 text-sm truncate">
-                                    {bookmark.title}
-                                  </span>
-                                </a>
-                              ))}
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  );
-                })
+                bookmarks.map(bookmark => renderBookmark(bookmark, 0))
               )}
             </div>
 
             {/* 底部提示 */}
             <div className="p-4 border-t border-slate-700/50 text-xs text-slate-500">
-              <p>💡 在书签设置中可以为书签添加分类</p>
+              {isExtension ? (
+                <p>💡 点击文件夹右侧的 + 可打开该文件夹内所有书签</p>
+              ) : (
+                <p>💡 在网页模式下无法访问浏览器书签</p>
+              )}
             </div>
           </motion.div>
         </>
