@@ -1,7 +1,6 @@
 import { 
   Palette, 
   Image, 
-  Settings2, 
   Clock, 
   Database, 
   Info,
@@ -25,7 +24,6 @@ const menuItems: MenuItem[] = [
   { id: 'bookmarks', label: '书签设置', icon: <Bookmark size={18} /> },
   { id: 'wallpaper', label: '壁纸设置', icon: <Image size={18} /> },
   { id: 'widgets', label: '小组件', icon: <LayoutGrid size={18} /> },
-  { id: 'features', label: '功能开关', icon: <Settings2 size={18} /> },
   { id: 'time', label: '时间设置', icon: <Clock size={18} /> },
   { id: 'customcss', label: '自定义 CSS', icon: <Code size={18} /> },
   { id: 'data', label: '数据管理', icon: <Database size={18} /> },

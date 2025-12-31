@@ -164,16 +164,12 @@ export interface AppSettings {
 export type SettingsTab = 
   | 'appearance'
   | 'bookmarks'
-  | 'theme'
   | 'wallpaper'
   | 'widgets'
-  | 'features'
-  | 'interaction'
   | 'time'
-  | 'cards'
+  | 'customcss'
   | 'data'
   | 'sync'
-  | 'customcss'
   | 'about';
 
 // 配置导出格式

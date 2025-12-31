@@ -156,17 +156,44 @@ export function WidgetsSettings() {
 
                     {/* 天气城市设置 */}
                     {'hasCity' in widget && widget.hasCity && (
-                      <div>
-                        <label className="text-slate-400 text-sm mb-2 block">城市</label>
-                        <input
-                          type="text"
-                          value={settings.weatherCity}
-                          onChange={(e) => updateSettings({ weatherCity: e.target.value })}
-                          placeholder="输入城市名称"
-                          className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm focus:outline-none focus:border-indigo-500"
-                        />
-                        <p className="text-slate-500 text-xs mt-1">留空自动定位，或输入城市名如"北京"</p>
-                      </div>
+                      <>
+                        <div>
+                          <label className="text-slate-400 text-sm mb-2 block">城市</label>
+                          <input
+                            type="text"
+                            value={settings.weatherCity}
+                            onChange={(e) => updateSettings({ weatherCity: e.target.value })}
+                            placeholder="输入城市名称"
+                            className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white text-sm focus:outline-none focus:border-indigo-500"
+                          />
+                          <p className="text-slate-500 text-xs mt-1">留空自动定位，或输入城市名如"深圳"</p>
+                        </div>
+                        <div>
+                          <label className="text-slate-400 text-sm mb-2 block">温度单位</label>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => updateSettings({ weatherUnit: 'celsius' })}
+                              className={`flex-1 px-3 py-2 rounded-lg text-sm transition-all ${
+                                settings.weatherUnit === 'celsius'
+                                  ? 'bg-indigo-500 text-white'
+                                  : 'bg-slate-700 text-slate-400 hover:text-white'
+                              }`}
+                            >
+                              摄氏度 (°C)
+                            </button>
+                            <button
+                              onClick={() => updateSettings({ weatherUnit: 'fahrenheit' })}
+                              className={`flex-1 px-3 py-2 rounded-lg text-sm transition-all ${
+                                settings.weatherUnit === 'fahrenheit'
+                                  ? 'bg-indigo-500 text-white'
+                                  : 'bg-slate-700 text-slate-400 hover:text-white'
+                              }`}
+                            >
+                              华氏度 (°F)
+                            </button>
+                          </div>
+                        </div>
+                      </>
                     )}
 
                     {/* 大小调整 - 单一尺寸 */}

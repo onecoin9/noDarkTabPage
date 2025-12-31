@@ -6,7 +6,6 @@ import { AppearanceSettings } from './AppearanceSettings';
 import { BookmarkSettings } from './BookmarkSettings';
 import { WallpaperSettings } from './WallpaperSettings';
 import { WidgetsSettings } from './WidgetsSettings';
-import { FeaturesSettings } from './FeaturesSettings';
 import { TimeSettings } from './TimeSettings';
 import { CustomCssSettings } from './CustomCssSettings';
 import { DataSettings } from './DataSettings';
@@ -28,8 +27,6 @@ export function SettingsModal() {
         return <WallpaperSettings />;
       case 'widgets':
         return <WidgetsSettings />;
-      case 'features':
-        return <FeaturesSettings />;
       case 'time':
         return <TimeSettings />;
       case 'customcss':
