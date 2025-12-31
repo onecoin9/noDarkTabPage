@@ -62,7 +62,7 @@ function BookmarkItem({ bookmark, index, onEdit }: Omit<BookmarkItemProps, 'onDe
         target="_blank"
         rel="noopener noreferrer"
         whileHover={{ y: -5, scale: 1.02 }}
-        className="flex flex-col items-center gap-2 p-5 bg-white/15 backdrop-blur-sm rounded-2xl border border-white/20 text-white cursor-pointer transition-all hover:bg-white/25 hover:shadow-lg"
+        className="flex flex-col items-center gap-2 p-5 bg-white/15 backdrop-blur-sm rounded-2xl border border-white/20 text-white cursor-pointer transition-all hover:bg-white/25 hover:shadow-lg relative overflow-hidden"
       >
         {bookmark.icon.startsWith('http') ? (
           <img src={bookmark.icon} alt={bookmark.title} className="w-10 h-10 rounded-lg" />
@@ -70,26 +70,26 @@ function BookmarkItem({ bookmark, index, onEdit }: Omit<BookmarkItemProps, 'onDe
           <span className="text-4xl">{bookmark.icon}</span>
         )}
         <span className="text-sm font-medium text-center truncate w-full">{bookmark.title}</span>
+        
+        {/* 设置图标 - 融入卡片右下角 */}
+        <AnimatePresence>
+          {showSettings && (
+            <motion.button
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onEdit(bookmark);
+              }}
+              className="absolute bottom-2 right-2 text-white/40 hover:text-white/80 transition-colors"
+            >
+              <Settings size={14} />
+            </motion.button>
+          )}
+        </AnimatePresence>
       </motion.a>
-      
-      {/* Hover 时显示设置按钮 - 在卡片内部 */}
-      <AnimatePresence>
-        {showSettings && (
-          <motion.button
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onEdit(bookmark);
-            }}
-            className="absolute top-2 right-2 w-6 h-6 bg-black/30 hover:bg-black/50 backdrop-blur-sm rounded-md flex items-center justify-center text-white/70 hover:text-white transition-all"
-          >
-            <Settings size={12} />
-          </motion.button>
-        )}
-      </AnimatePresence>
     </motion.div>
   );
 }
