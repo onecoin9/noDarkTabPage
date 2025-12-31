@@ -3,10 +3,12 @@ import { X } from 'lucide-react';
 import { useAppStore } from '../../stores/useAppStore';
 import { SettingsSidebar } from './SettingsSidebar';
 import { AppearanceSettings } from './AppearanceSettings';
+import { BookmarkSettings } from './BookmarkSettings';
 import { WallpaperSettings } from './WallpaperSettings';
 import { WidgetsSettings } from './WidgetsSettings';
 import { FeaturesSettings } from './FeaturesSettings';
 import { TimeSettings } from './TimeSettings';
+import { CustomCssSettings } from './CustomCssSettings';
 import { DataSettings } from './DataSettings';
 import { CloudSyncSettings } from './CloudSyncSettings';
 import { AboutSettings } from './AboutSettings';
@@ -20,6 +22,8 @@ export function SettingsModal() {
     switch (settingsTab) {
       case 'appearance':
         return <AppearanceSettings />;
+      case 'bookmarks':
+        return <BookmarkSettings />;
       case 'wallpaper':
         return <WallpaperSettings />;
       case 'widgets':
@@ -28,6 +32,8 @@ export function SettingsModal() {
         return <FeaturesSettings />;
       case 'time':
         return <TimeSettings />;
+      case 'customcss':
+        return <CustomCssSettings />;
       case 'data':
         return <DataSettings />;
       case 'sync':

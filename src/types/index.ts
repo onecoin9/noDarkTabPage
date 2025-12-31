@@ -162,6 +162,7 @@ export interface AppSettings {
 // 设置页面标签
 export type SettingsTab = 
   | 'appearance'
+  | 'bookmarks'
   | 'theme'
   | 'wallpaper'
   | 'widgets'
@@ -171,6 +172,7 @@ export type SettingsTab =
   | 'cards'
   | 'data'
   | 'sync'
+  | 'customcss'
   | 'about';
 
 // 配置导出格式
