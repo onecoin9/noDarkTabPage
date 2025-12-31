@@ -75,6 +75,9 @@ export interface AppSettings {
   searchBoxColor: string;
   searchBoxRadius: number;
   
+  // 时间字体大小
+  clockFontSize: number;
+  
   // 外观
   background: BackgroundConfig;
   customCss: string;

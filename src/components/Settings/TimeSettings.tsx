@@ -37,6 +37,26 @@ export function TimeSettings() {
             </div>
           </div>
 
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-slate-400 text-sm">时钟字体大小</label>
+              <span className="text-indigo-400 font-medium">{settings.clockFontSize || 80}px</span>
+            </div>
+            <input
+              type="range"
+              min="40"
+              max="150"
+              value={settings.clockFontSize || 80}
+              onChange={(e) => updateSettings({ clockFontSize: Number(e.target.value) })}
+              className="w-full"
+            />
+            <div className="flex justify-between text-xs text-slate-500 mt-1">
+              <span>小</span>
+              <span>中</span>
+              <span>大</span>
+            </div>
+          </div>
+
           <ToggleOption
             label="显示秒数"
             checked={settings.showSeconds}

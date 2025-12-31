@@ -5,6 +5,7 @@ import { useAppStore } from '../stores/useAppStore';
 export function Clock() {
   const settings = useAppStore((s) => s.settings);
   const { time, date } = useTime(settings.showSeconds, settings.timeFormat);
+  const fontSize = settings.clockFontSize || 80;
 
   return (
     <motion.div
@@ -13,11 +14,17 @@ export function Clock() {
       transition={{ duration: 0.8 }}
       className="text-center"
     >
-      <div className="text-7xl md:text-8xl font-extralight tracking-tight text-white drop-shadow-lg">
+      <div 
+        className="font-extralight tracking-tight text-white drop-shadow-lg"
+        style={{ fontSize: `${fontSize}px` }}
+      >
         {time}
       </div>
       {settings.showDate && (
-        <div className="text-lg md:text-xl text-white/90 mt-3 font-light">
+        <div 
+          className="text-white/90 mt-3 font-light"
+          style={{ fontSize: `${Math.max(fontSize * 0.2, 16)}px` }}
+        >
           {date}
         </div>
       )}
