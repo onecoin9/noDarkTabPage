@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, Download } from 'lucide-react';
 import { useAppStore } from '../../stores/useAppStore';
 import type { BackgroundType } from '../../types';
 
@@ -27,11 +27,14 @@ const unsplashCategories = [
 const WALLHAVEN_PROXY_URL = 'https://gbfdfpxlltnvnrsayrou.supabase.co/functions/v1/wallhaven';
 
 const wallhavenCategories = [
-  { name: '热门', value: 'toplist' },
-  { name: '动漫', value: 'anime' },
+  { name: '热门榜', value: 'toplist' },
+  { name: '随机', value: 'random' },
+  { name: '最新', value: 'date_added' },
+  { name: '浏览量', value: 'views' },
+  { name: '收藏数', value: 'favorites' },
   { name: '风景', value: 'landscape' },
   { name: '极简', value: 'minimalist' },
-  { name: '赛博朋克', value: 'cyberpunk' },
+  { name: '一般', value: 'general' },
 ];
 
 export function WallpaperSettings() {
@@ -224,6 +227,16 @@ export function WallpaperSettings() {
                 alt="当前壁纸" 
                 className="w-full h-32 object-cover rounded-xl"
               />
+              <a
+                href={settings.background.value}
+                download
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 w-full mt-3 p-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl transition-colors"
+              >
+                <Download size={18} />
+                下载壁纸
+              </a>
             </div>
           )}
         </section>
