@@ -18,7 +18,7 @@ export function Weather() {
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(true);
   const position = settings.weatherPosition || { preset: 'center-left', offsetX: 0, offsetY: -100 };
-  const scale = settings.weatherScale || 100;
+  const size = settings.weatherSize || 200;
 
   useEffect(() => {
     const mockWeather = () => {
@@ -38,7 +38,7 @@ export function Weather() {
   }, [settings.weatherCity]);
 
   const getWeatherIcon = (icon: string) => {
-    const iconSize = Math.round(32 * scale / 100);
+    const iconSize = Math.round(32 * size / 200);
     switch (icon) {
       case 'sun': return <Sun size={iconSize} className="text-yellow-400" />;
       case 'cloud': return <Cloud size={iconSize} className="text-gray-300" />;
@@ -53,10 +53,13 @@ export function Weather() {
     : weather?.temp;
   const tempUnit = settings.weatherUnit === 'fahrenheit' ? '°F' : '°C';
 
+  const fontSize = Math.round(size / 200 * 16);
+  const tempFontSize = Math.round(size / 200 * 30);
+
   const content = loading ? (
     <div 
       className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20"
-      style={{ transform: `scale(${scale / 100})`, transformOrigin: 'top left' }}
+      style={{ width: `${size}px` }}
     >
       <div className="animate-pulse flex items-center gap-3">
         <div className="w-12 h-12 bg-white/20 rounded-full" />
@@ -71,20 +74,20 @@ export function Weather() {
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/20"
-      style={{ transform: `scale(${scale / 100})`, transformOrigin: 'top left' }}
+      style={{ width: `${size}px` }}
     >
       <div className="flex items-center gap-4">
         {weather && getWeatherIcon(weather.icon)}
         <div>
-          <div className="text-3xl font-bold text-white">{displayTemp}{tempUnit}</div>
-          <div className="text-white/60 text-sm">{settings.weatherCity} · {weather?.description}</div>
+          <div className="font-bold text-white" style={{ fontSize: `${tempFontSize}px` }}>{displayTemp}{tempUnit}</div>
+          <div className="text-white/60" style={{ fontSize: `${fontSize}px` }}>{settings.weatherCity} · {weather?.description}</div>
         </div>
       </div>
       <div className="flex gap-4 mt-3 pt-3 border-t border-white/10">
-        <div className="flex items-center gap-1 text-white/60 text-sm">
+        <div className="flex items-center gap-1 text-white/60" style={{ fontSize: `${fontSize}px` }}>
           <span>💧</span><span>{weather?.humidity}%</span>
         </div>
-        <div className="flex items-center gap-1 text-white/60 text-sm">
+        <div className="flex items-center gap-1 text-white/60" style={{ fontSize: `${fontSize}px` }}>
           <Wind size={14} /><span>{weather?.wind} km/h</span>
         </div>
       </div>
@@ -96,11 +99,10 @@ export function Weather() {
       name="天气"
       position={position}
       onPositionChange={(pos) => updateSettings({ weatherPosition: pos })}
-      size={scale}
-      minSize={50}
-      maxSize={150}
-      onSizeChange={(size) => updateSettings({ weatherScale: size })}
-      sizeUnit="%"
+      size={size}
+      minSize={100}
+      maxSize={400}
+      onSizeChange={(size) => updateSettings({ weatherSize: size })}
     >
       {content}
     </EditableWidget>

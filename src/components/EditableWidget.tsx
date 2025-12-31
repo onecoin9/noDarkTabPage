@@ -14,7 +14,6 @@ interface EditableWidgetProps {
   maxSize?: number;
   onSizeChange?: (size: number) => void;
   className?: string;
-  sizeUnit?: 'px' | '%'; // 新增：大小单位
 }
 
 // 位置预设到CSS的映射
@@ -52,7 +51,6 @@ export function EditableWidget({
   maxSize = 200,
   onSizeChange,
   className = '',
-  sizeUnit = 'px',
 }: EditableWidgetProps) {
   const { isEditMode } = useEditMode();
   const [isDragging, setIsDragging] = useState(false);
@@ -94,9 +92,7 @@ export function EditableWidget({
       }
       if (isResizing && onSizeChange) {
         const deltaY = e.clientY - dragStart.y;
-        // 根据单位调整灵敏度
-        const sensitivity = sizeUnit === '%' ? 0.2 : 0.5;
-        const newSize = Math.max(minSize, Math.min(maxSize, startSize + deltaY * sensitivity));
+        const newSize = Math.max(minSize, Math.min(maxSize, startSize + deltaY * 0.5));
         onSizeChange(Math.round(newSize));
       }
     };
@@ -140,7 +136,7 @@ export function EditableWidget({
         <Move size={12} />
         <span className="font-medium">{name}</span>
         {onSizeChange && size && (
-          <span className="text-indigo-200 ml-1">{size}{sizeUnit}</span>
+          <span className="text-indigo-200 ml-1">{size}px</span>
         )}
       </motion.div>
 
@@ -167,7 +163,7 @@ export function EditableWidget({
           animate={{ opacity: 1 }}
           className="absolute -bottom-7 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-slate-800 text-white text-xs rounded shadow-lg whitespace-nowrap"
         >
-          {isResizing && size ? `${size}${sizeUnit}` : `${position.offsetX}, ${position.offsetY}`}
+          {isResizing && size ? `${size}px` : `${position.offsetX}, ${position.offsetY}`}
         </motion.div>
       )}
     </div>

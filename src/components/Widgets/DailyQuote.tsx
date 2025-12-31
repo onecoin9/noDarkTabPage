@@ -29,7 +29,7 @@ export function DailyQuote() {
   const settings = useAppStore((s) => s.settings);
   const updateSettings = useAppStore((s) => s.updateSettings);
   const position = settings.quotePosition || { preset: 'center', offsetX: 0, offsetY: 60 };
-  const scale = settings.quoteScale || 100;
+  const size = settings.quoteSize || 100;
 
   useEffect(() => {
     const today = new Date();
@@ -42,28 +42,37 @@ export function DailyQuote() {
 
   if (!quote) return null;
 
+  const quoteFontSize = Math.round(size / 100 * 20);
+  const authorFontSize = Math.round(size / 100 * 14);
+  const maxWidth = Math.round(size / 100 * 600);
+
   return (
     <EditableWidget
       name="每日一言"
       position={position}
       onPositionChange={(pos) => updateSettings({ quotePosition: pos })}
-      size={scale}
-      minSize={50}
-      maxSize={150}
-      onSizeChange={(size) => updateSettings({ quoteScale: size })}
-      sizeUnit="%"
+      size={size}
+      minSize={60}
+      maxSize={200}
+      onSizeChange={(size) => updateSettings({ quoteSize: size })}
     >
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
-        className="text-center max-w-xl"
-        style={{ transform: `scale(${scale / 100})`, transformOrigin: 'center center' }}
+        className="text-center"
+        style={{ maxWidth: `${maxWidth}px` }}
       >
-        <p className="text-white/80 text-lg md:text-xl font-light leading-relaxed">
+        <p 
+          className="text-white/80 font-light leading-relaxed"
+          style={{ fontSize: `${quoteFontSize}px` }}
+        >
           「{quote.content}」
         </p>
-        <p className="text-white/50 text-sm mt-2">
+        <p 
+          className="text-white/50 mt-2"
+          style={{ fontSize: `${authorFontSize}px` }}
+        >
           —— {quote.author}
           {quote.source && <span>《{quote.source}》</span>}
         </p>

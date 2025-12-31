@@ -13,7 +13,7 @@ export function WidgetsSettings() {
       icon: '🌤️', 
       description: '显示当前天气信息',
       positionKey: 'weatherPosition',
-      scaleKey: 'weatherScale',
+      sizeKey: 'weatherSize',
     },
     { 
       key: 'showPomodoro', 
@@ -21,7 +21,7 @@ export function WidgetsSettings() {
       icon: '🍅', 
       description: '专注工作计时器',
       positionKey: 'pomodoroPosition',
-      scaleKey: 'pomodoroScale',
+      sizeKey: 'pomodoroSize',
     },
     { 
       key: 'showTodo', 
@@ -29,7 +29,7 @@ export function WidgetsSettings() {
       icon: '✅', 
       description: '管理你的任务列表',
       positionKey: 'todoPosition',
-      scaleKey: 'todoScale',
+      sizeKey: 'todoSize',
     },
     { 
       key: 'showQuote', 
@@ -37,7 +37,7 @@ export function WidgetsSettings() {
       icon: '📜', 
       description: '每日诗词名言',
       positionKey: 'quotePosition',
-      scaleKey: 'quoteScale',
+      sizeKey: 'quoteSize',
     },
     { key: 'showCountdown', label: '倒计时', icon: '⏰', description: '重要日期倒计时' },
     { key: 'showNote', label: '便签', icon: '📝', description: '快速记录笔记' },
@@ -88,7 +88,7 @@ export function WidgetsSettings() {
             const isEnabled = settings[widget.key as keyof typeof settings];
             const hasPosition = 'positionKey' in widget;
             const side = hasPosition ? getSide(widget.positionKey!) : 'left';
-            const scale = hasPosition ? (settings[widget.scaleKey as keyof typeof settings] as number || 100) : 100;
+            const size = hasPosition ? (settings[widget.sizeKey as keyof typeof settings] as number || 200) : 200;
             
             return (
               <div
@@ -154,21 +154,21 @@ export function WidgetsSettings() {
                     <div>
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-slate-400 text-sm">大小</span>
-                        <span className="text-indigo-400 text-sm font-medium">{scale}%</span>
+                        <span className="text-indigo-400 text-sm font-medium">{size}px</span>
                       </div>
                       <input
                         type="range"
-                        min="50"
-                        max="150"
-                        step="10"
-                        value={scale}
-                        onChange={(e) => updateSettings({ [widget.scaleKey!]: Number(e.target.value) })}
+                        min="100"
+                        max="400"
+                        step="20"
+                        value={size}
+                        onChange={(e) => updateSettings({ [widget.sizeKey!]: Number(e.target.value) })}
                         className="w-full"
                       />
                       <div className="flex justify-between text-xs text-slate-500 mt-1">
-                        <span>50%</span>
-                        <span>100%</span>
-                        <span>150%</span>
+                        <span>100px</span>
+                        <span>250px</span>
+                        <span>400px</span>
                       </div>
                     </div>
                   </div>
