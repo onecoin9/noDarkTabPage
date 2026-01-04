@@ -43,62 +43,41 @@ function App() {
     <div className="min-h-screen relative overflow-hidden bg-transparent">
       <Background />
       <CustomCss />
-      <SettingsButton />
-      <EditModeButton />
-      <BookmarkPanelButton />
-      <SettingsModal />
-
-      {/* 时钟 */}
-      <div className="md:block">
-        <Clock />
+      
+      {/* 设置和编辑按钮 - 移动端隐藏 */}
+      <div className="hidden md:block">
+        <SettingsButton />
+        <EditModeButton />
+        <BookmarkPanelButton />
       </div>
       
-      {/* 每日一言 */}
-      {settings.showQuote && (
-        <div className="md:block">
-          <DailyQuote />
-        </div>
-      )}
-      
-      {/* 搜索框 */}
-      <div className="md:block">
+      <SettingsModal />
+
+      {/* 移动端：时钟和搜索框居中布局 */}
+      <div className="md:hidden flex flex-col items-center justify-center min-h-screen px-4 gap-8">
+        <Clock />
         <SearchBox />
       </div>
 
-      {/* 小组件 - 现在都是可拖拽的 */}
-      {settings.showWeather && (
-        <div className="md:block">
-          <Weather />
-        </div>
-      )}
-      {settings.showPomodoro && (
-        <div className="md:block">
-          <Pomodoro />
-        </div>
-      )}
-      {settings.showTodo && (
-        <div className="md:block">
-          <TodoList />
-        </div>
-      )}
-      {settings.showCountdown && (
-        <div className="md:block">
-          <CountdownWidget />
-        </div>
-      )}
-      {settings.showNote && (
-        <div className="md:block">
-          <NoteWidget />
-        </div>
-      )}
-      {settings.showCalendar && (
-        <div className="md:block">
-          <CalendarWidget />
-        </div>
-      )}
+      {/* 桌面端：原有布局 */}
+      <div className="hidden md:block">
+        <Clock />
+        
+        {settings.showQuote && <DailyQuote />}
+        
+        <SearchBox />
 
-      {/* 书签区域 */}
-      <div className={`fixed inset-0 flex p-4 md:p-8 lg:p-16 z-10 pointer-events-none ${getPositionClasses(bookmarkPosition)}`}>
+        {/* 小组件 */}
+        {settings.showWeather && <Weather />}
+        {settings.showPomodoro && <Pomodoro />}
+        {settings.showTodo && <TodoList />}
+        {settings.showCountdown && <CountdownWidget />}
+        {settings.showNote && <NoteWidget />}
+        {settings.showCalendar && <CalendarWidget />}
+      </div>
+
+      {/* 书签区域 - 仅桌面端 */}
+      <div className={`hidden md:flex fixed inset-0 p-4 md:p-8 lg:p-16 z-10 pointer-events-none ${getPositionClasses(bookmarkPosition)}`}>
         <div className="pointer-events-auto">
           <BookmarkGrid />
         </div>
