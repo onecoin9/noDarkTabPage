@@ -59,7 +59,7 @@ export function SettingsModal() {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed inset-4 md:inset-10 lg:inset-20 bg-slate-900/95 backdrop-blur-xl rounded-2xl shadow-2xl z-50 flex overflow-hidden border border-slate-700/50"
+            className="fixed inset-4 md:inset-8 lg:inset-0 lg:top-[5%] lg:bottom-[5%] lg:left-1/2 lg:-translate-x-1/2 lg:w-[1200px] lg:max-w-[90vw] bg-slate-900/95 backdrop-blur-xl rounded-2xl shadow-2xl z-50 flex overflow-hidden border border-slate-700/50"
           >
             {/* 侧边栏 */}
             <SettingsSidebar />
