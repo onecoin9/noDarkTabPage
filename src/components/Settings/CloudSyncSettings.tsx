@@ -240,20 +240,23 @@ export function CloudSyncSettings() {
               提示：上传会覆盖云端数据，下载会覆盖本地数据。
             </p>
 
-            {/* 调试按钮 */}
-            <div className="pt-4 border-t border-slate-700 space-y-2">
-              <button
-                onClick={viewLocalData}
-                className="w-full p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-sm transition-colors"
-              >
-                📱 查看本地数据（调试）
-              </button>
-              <button
-                onClick={viewCloudData}
-                className="w-full p-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-sm transition-colors"
-              >
-                ☁️ 查看云端数据（调试）
-              </button>
+            {/* 调试工具 */}
+            <div className="pt-4 border-t border-slate-700">
+              <p className="text-slate-400 text-xs mb-2">🔧 调试工具</p>
+              <div className="space-y-2">
+                <button
+                  onClick={viewLocalData}
+                  className="w-full p-3 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/50 text-blue-300 rounded-lg text-sm transition-colors font-medium"
+                >
+                  📱 查看本地数据
+                </button>
+                <button
+                  onClick={viewCloudData}
+                  className="w-full p-3 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/50 text-purple-300 rounded-lg text-sm transition-colors font-medium"
+                >
+                  ☁️ 查看云端数据
+                </button>
+              </div>
             </div>
 
             {/* 本地数据显示 */}
