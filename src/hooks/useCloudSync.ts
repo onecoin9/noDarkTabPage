@@ -1,4 +1,4 @@
-![1767488052888](image/useCloudSync/1767488052888.png)![1767488056239](image/useCloudSync/1767488056239.png)![1767488142763](image/useCloudSync/1767488142763.png)import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAppStore } from '../stores/useAppStore';
 import type { User, Session } from '@supabase/supabase-js';
