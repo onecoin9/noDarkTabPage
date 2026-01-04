@@ -11,7 +11,7 @@
         "storage",
         "bookmarks"
     ],
-    "content_security_policy": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; img-src 'self' data: https: http:; style-src 'self' 'unsafe-inline'",
+    "content_security_policy": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; img-src 'self' data: https: http: blob:; style-src 'self' 'unsafe-inline'; connect-src 'self' https: http:",
     "icons": {
         "48": "icons/icon48.png",
         "96": "icons/icon96.png"
