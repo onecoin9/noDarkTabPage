@@ -25,6 +25,8 @@ export function CloudSyncSettings() {
   const [showDebug, setShowDebug] = useState(false);
   const [localData, setLocalData] = useState<string | null>(null);
   const [showLocal, setShowLocal] = useState(false);
+  const [isLoadingCloud, setIsLoadingCloud] = useState(false);
+  const [isLoadingLocal, setIsLoadingLocal] = useState(false);
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,6 +43,7 @@ export function CloudSyncSettings() {
 
   // 查看本地数据
   const viewLocalData = () => {
+    setIsLoadingLocal(true);
     try {
       const state = useAppStore.getState();
       const localState = {
@@ -48,35 +51,60 @@ export function CloudSyncSettings() {
         settings: state.settings,
         todos: state.todos,
       };
+      console.log('本地数据:', localState);
       setLocalData(JSON.stringify(localState, null, 2));
       setShowLocal(true);
     } catch (err) {
       console.error('获取本地数据失败:', err);
       setLocalData(`错误: ${err instanceof Error ? err.message : '未知错误'}`);
       setShowLocal(true);
+    } finally {
+      setIsLoadingLocal(false);
     }
   };
 
   // 查看云端数据
   const viewCloudData = async () => {
-    if (!user) return;
+    if (!user) {
+      alert('请先登录');
+      return;
+    }
     
+    setIsLoadingCloud(true);
     try {
+      console.log('开始获取云端数据，用户ID:', user.id);
       const { supabase } = await import('../../lib/supabase');
+      
       const { data, error } = await supabase
         .from('user_settings')
         .select('*')
         .eq('user_id', user.id)
         .single();
       
-      if (error) throw error;
+      console.log('Supabase 响应:', { data, error });
       
+      if (error) {
+        if (error.code === 'PGRST116') {
+          throw new Error('云端没有数据，请先上传');
+        }
+        throw error;
+      }
+      
+      if (!data) {
+        throw new Error('云端没有数据');
+      }
+      
+      console.log('云端数据:', data);
       setDebugData(JSON.stringify(data, null, 2));
       setShowDebug(true);
     } catch (err) {
       console.error('获取云端数据失败:', err);
-      setDebugData(`错误: ${err instanceof Error ? err.message : '未知错误'}`);
+      const errorMsg = err instanceof Error ? err.message : '未知错误';
+      setDebugData(`错误: ${errorMsg}`);
       setShowDebug(true);
+      alert(`获取云端数据失败: ${errorMsg}`);
+    } finally {
+      setIsLoadingCloud(false);
     }
   };
 
@@ -246,15 +274,31 @@ export function CloudSyncSettings() {
               <div className="space-y-2">
                 <button
                   onClick={viewLocalData}
-                  className="w-full p-3 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/50 text-blue-300 rounded-lg text-sm transition-colors font-medium"
+                  disabled={isLoadingLocal}
+                  className="w-full p-3 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/50 text-blue-300 rounded-lg text-sm transition-colors font-medium disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  📱 查看本地数据
+                  {isLoadingLocal ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      加载中...
+                    </>
+                  ) : (
+                    <>📱 查看本地数据</>
+                  )}
                 </button>
                 <button
                   onClick={viewCloudData}
-                  className="w-full p-3 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/50 text-purple-300 rounded-lg text-sm transition-colors font-medium"
+                  disabled={isLoadingCloud}
+                  className="w-full p-3 bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/50 text-purple-300 rounded-lg text-sm transition-colors font-medium disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  ☁️ 查看云端数据
+                  {isLoadingCloud ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      加载中...
+                    </>
+                  ) : (
+                    <>☁️ 查看云端数据</>
+                  )}
                 </button>
               </div>
             </div>
