@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Cloud, Upload, Download, LogOut, Loader2, Check, AlertCircle, X } from 'lucide-react';
 import { useCloudSync } from '../../hooks/useCloudSync';
+import { useAppStore } from '../../stores/useAppStore';
 
 export function CloudSyncSettings() {
   const {
@@ -41,7 +42,6 @@ export function CloudSyncSettings() {
   // 查看本地数据
   const viewLocalData = () => {
     try {
-      const { useAppStore } = require('../../stores/useAppStore');
       const state = useAppStore.getState();
       const localState = {
         bookmarks: state.bookmarks,
