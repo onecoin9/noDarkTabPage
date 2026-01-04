@@ -95,10 +95,16 @@ export function Background() {
   return (
     <>
       <div
-        className="fixed inset-0 -z-20 transition-all duration-500"
-        style={style}
+        className="fixed inset-0 transition-all duration-500"
+        style={{
+          ...style,
+          zIndex: -20,
+        }}
       />
-      <div className="fixed inset-0 -z-10 bg-black/20" />
+      <div 
+        className="fixed inset-0 bg-black/20" 
+        style={{ zIndex: -10 }}
+      />
     </>
   );
 }

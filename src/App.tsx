@@ -40,7 +40,7 @@ function App() {
   const bookmarkPosition = settings.bookmarkPosition || 'center';
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden bg-transparent">
       <Background />
       <CustomCss />
       <SettingsButton />
