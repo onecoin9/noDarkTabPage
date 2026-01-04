@@ -55,10 +55,10 @@ const defaultSettings: AppSettings = {
   bookmarkDisplayMode: 'grid',
   bookmarkPosition: 'center',
   showBookmarkTitle: true,
-  showWeather: true,
-  showQuote: true,
-  showTodo: true,
-  showPomodoro: true,
+  showWeather: false,
+  showQuote: false,
+  showTodo: false,
+  showPomodoro: false,
   showCountdown: false,
   showNote: false,
   showCalendar: false,
@@ -297,16 +297,34 @@ export const useAppStore = create<AppState>()(
           console.log('导入配置 - 当前状态:', currentState);
           console.log('导入配置 - 新配置:', config);
           
-          // 深度合并设置，保留所有字段
-          const newSettings = config.settings ? {
-            ...currentState.settings,
-            ...config.settings,
-          } : currentState.settings;
+          // 需要排除的字段（不同步）
+          const excludedFields = [
+            'showWeather',
+            'showQuote', 
+            'showTodo',
+            'showPomodoro',
+            'showCountdown',
+            'showNote',
+            'showCalendar',
+            'background', // 不同步壁纸配置
+          ];
+          
+          // 深度合并设置，但排除特定字段
+          let newSettings = { ...currentState.settings };
+          
+          if (config.settings) {
+            Object.keys(config.settings).forEach(key => {
+              if (!excludedFields.includes(key)) {
+                (newSettings as any)[key] = config.settings[key];
+              }
+            });
+          }
           
           const newBookmarks = config.bookmarks || currentState.bookmarks;
           const newTodos = config.todos || currentState.todos;
           
           console.log('导入配置 - 合并后的设置:', newSettings);
+          console.log('导入配置 - 排除的字段:', excludedFields);
           console.log('导入配置 - 合并后的书签:', newBookmarks);
           console.log('导入配置 - 合并后的待办:', newTodos);
           

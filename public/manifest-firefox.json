@@ -11,6 +11,7 @@
         "storage",
         "bookmarks"
     ],
+    "content_security_policy": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'",
     "icons": {
         "48": "icons/icon48.png",
         "96": "icons/icon96.png"

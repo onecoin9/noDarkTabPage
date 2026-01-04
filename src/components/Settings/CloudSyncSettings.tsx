@@ -267,6 +267,14 @@ export function CloudSyncSettings() {
             <p className="text-slate-500 text-xs">
               提示：上传会覆盖云端数据，下载会覆盖本地数据。
             </p>
+            
+            <div className="p-3 bg-slate-800/50 rounded-lg border border-slate-700">
+              <p className="text-slate-400 text-xs mb-1">📋 同步说明</p>
+              <p className="text-slate-500 text-xs leading-relaxed">
+                • 会同步：书签、时钟样式、搜索设置、小组件位置/大小、待办事项<br/>
+                • 不同步：壁纸配置、小组件开关状态（每次默认关闭）
+              </p>
+            </div>
 
             {/* 调试工具 */}
             <div className="pt-4 border-t border-slate-700">
