@@ -6,26 +6,36 @@ export function Background() {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
 
+  // 检测是否为移动端
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
+  // 移动端强制使用 Bing 每日壁纸
+  const effectiveBackground = isMobile 
+    ? { type: 'bing' as const, value: '', blur: 0, brightness: 100 }
+    : background;
+
   // 调试：输出当前壁纸配置
   console.log('当前壁纸配置:', background);
+  console.log('是否移动端:', isMobile);
+  console.log('实际使用的壁纸:', effectiveBackground);
 
   // 预加载图片
   useEffect(() => {
-    if (background.type === 'custom' || background.type === 'unsplash' || background.type === 'wallhaven') {
+    if (effectiveBackground.type === 'custom' || effectiveBackground.type === 'unsplash' || effectiveBackground.type === 'wallhaven') {
       setImageLoaded(false);
       setImageError(false);
       
       const img = new Image();
       img.onload = () => {
-        console.log('图片加载成功:', background.value);
+        console.log('图片加载成功:', effectiveBackground.value);
         setImageLoaded(true);
       };
       img.onerror = () => {
-        console.error('图片加载失败:', background.value);
+        console.error('图片加载失败:', effectiveBackground.value);
         setImageError(true);
       };
-      img.src = background.value;
-    } else if (background.type === 'bing') {
+      img.src = effectiveBackground.value;
+    } else if (effectiveBackground.type === 'bing') {
       setImageLoaded(false);
       setImageError(false);
       
@@ -41,28 +51,28 @@ export function Background() {
       };
       img.src = bingUrl;
     }
-  }, [background.type, background.value]);
+  }, [effectiveBackground.type, effectiveBackground.value]);
 
   const getBackgroundStyle = (): React.CSSProperties => {
     const baseStyle: React.CSSProperties = {
-      filter: `blur(${background.blur || 0}px) brightness(${(background.brightness || 100) / 100})`,
+      filter: `blur(${effectiveBackground.blur || 0}px) brightness(${(effectiveBackground.brightness || 100) / 100})`,
     };
 
-    switch (background.type) {
+    switch (effectiveBackground.type) {
       case 'gradient':
-        console.log('使用渐变背景:', background.value);
-        return { ...baseStyle, background: background.value };
+        console.log('使用渐变背景:', effectiveBackground.value);
+        return { ...baseStyle, background: effectiveBackground.value };
       case 'custom':
       case 'unsplash':
       case 'wallhaven':
-        console.log('使用图片背景:', background.value, '加载状态:', imageLoaded, '错误:', imageError);
+        console.log('使用图片背景:', effectiveBackground.value, '加载状态:', imageLoaded, '错误:', imageError);
         if (imageError) {
           console.warn('图片加载失败，使用默认渐变');
           return { ...baseStyle, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' };
         }
         return {
           ...baseStyle,
-          backgroundImage: `url(${background.value})`,
+          backgroundImage: `url(${effectiveBackground.value})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
@@ -81,8 +91,8 @@ export function Background() {
           backgroundRepeat: 'no-repeat',
         };
       case 'solid':
-        console.log('使用纯色背景:', background.value);
-        return { ...baseStyle, backgroundColor: background.value };
+        console.log('使用纯色背景:', effectiveBackground.value);
+        return { ...baseStyle, backgroundColor: effectiveBackground.value };
       default:
         console.log('使用默认渐变背景');
         return { ...baseStyle, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' };
