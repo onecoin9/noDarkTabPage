@@ -113,6 +113,29 @@ async function loadFromCloud(userId: string) {
 
 ---
 
+## OAuth 重定向配置（必读）
+
+`signInWithOAuth` 的回跳地址随运行环境不同（实现见 `src/lib/oauth.ts`）：
+
+| 运行环境 | 回跳地址 | 说明 |
+| --- | --- | --- |
+| 网页版 | `https://constantine9.ggff.net/` | 站点根路径 |
+| 本地开发 | `http://localhost:5173/` | `npm run dev` 默认端口 |
+| 浏览器扩展 | `https://<extension-id>.chromiumapp.org/` | 由 `chrome.identity.getRedirectURL()` 生成 |
+
+需在 **Supabase Dashboard → Authentication → URL Configuration**：
+
+- **Site URL** 设为 `https://constantine9.ggff.net`
+- **Redirect URLs** 至少包含 `https://constantine9.ggff.net/**`、`http://localhost:5173/**`；
+  扩展场景再加 `https://*.chromiumapp.org/**`（扩展 ID 随安装变化，用通配符最省事）
+
+> ⚠️ 扩展内无法用 `chrome-extension://` 作为回跳地址，浏览器会拦截第三方跳转到扩展页面，
+> 因此扩展版通过 `chrome.identity.launchWebAuthFlow` 走 `chromiumapp.org` 中转，
+> 需要清单文件中的 `identity` 权限（`public/manifest.json` / `manifest-firefox.json`）。
+> 未配置白名单时登录会失败，此时请改用邮箱登录。
+
+---
+
 ## 其他方案
 
 ### 方案 B：GitHub Gist

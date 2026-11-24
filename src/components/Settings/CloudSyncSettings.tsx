@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { Cloud, Upload, Download, LogOut, Loader2, Check, AlertCircle, X } from 'lucide-react';
+import { Cloud, Upload, Download, LogOut, Loader2, Check, AlertCircle, X, Plug } from 'lucide-react';
 import { useCloudSync } from '../../hooks/useCloudSync';
 import { useAppStore } from '../../stores/useAppStore';
+import { checkCloudConnectivity, type CloudDiagnostic } from '../../lib/supabase';
+import { isExtensionRuntime } from '../../lib/oauth';
 
 export function CloudSyncSettings() {
   const {
@@ -27,6 +29,18 @@ export function CloudSyncSettings() {
   const [showLocal, setShowLocal] = useState(false);
   const [isLoadingCloud, setIsLoadingCloud] = useState(false);
   const [isLoadingLocal, setIsLoadingLocal] = useState(false);
+  const [isDiagnosing, setIsDiagnosing] = useState(false);
+  const [diagnostic, setDiagnostic] = useState<CloudDiagnostic | null>(null);
+
+  const runDiagnostic = async () => {
+    setIsDiagnosing(true);
+    setDiagnostic(null);
+    try {
+      setDiagnostic(await checkCloudConnectivity());
+    } finally {
+      setIsDiagnosing(false);
+    }
+  };
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -152,6 +166,14 @@ export function CloudSyncSettings() {
                 Google
               </button>
             </div>
+
+            {isExtensionRuntime() && (
+              <p className="text-slate-500 text-xs leading-relaxed">
+                扩展环境下 OAuth 需要 Supabase 的 Redirect URLs 已包含
+                <span className="text-slate-400"> https://*.chromiumapp.org/** </span>
+                才会成功；若登录失败，请改用邮箱登录，或先在网页版登录。
+              </p>
+            )}
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
@@ -348,6 +370,34 @@ export function CloudSyncSettings() {
             )}
           </div>
         )}
+        {/* 连接诊断：未登录时也可用，便于区分「云端不可达」与「账号/密码问题」 */}
+        <div className="mt-6 pt-4 border-t border-slate-700">
+          <p className="text-slate-400 text-xs mb-2">🔌 连接诊断</p>
+          <button
+            onClick={runDiagnostic}
+            disabled={isDiagnosing}
+            className="w-full p-3 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 rounded-lg text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {isDiagnosing ? <Loader2 size={16} className="animate-spin" /> : <Plug size={16} />}
+            {isDiagnosing ? '正在检测...' : '检测云端连接'}
+          </button>
+          {diagnostic && (
+            <div
+              className={`mt-3 p-3 rounded-lg border flex items-start gap-2 text-xs leading-relaxed ${
+                diagnostic.ok
+                  ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-300'
+                  : 'bg-red-500/10 border-red-500/40 text-red-300'
+              }`}
+            >
+              {diagnostic.ok ? (
+                <Check size={16} className="shrink-0 mt-0.5" />
+              ) : (
+                <AlertCircle size={16} className="shrink-0 mt-0.5" />
+              )}
+              <span>{diagnostic.message}</span>
+            </div>
+          )}
+        </div>
       </section>
     </div>
   );

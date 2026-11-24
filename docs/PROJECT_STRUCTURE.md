@@ -146,7 +146,7 @@ dist/
 - **和风天气 API Key**: `src/lib/weather.ts` (第 4 行)
 - **Supabase 配置**: `src/lib/supabase.ts`
 - **Wallhaven API Key**: `src/lib/wallhaven.ts`
-- **Google OAuth**: `src/lib/supabase.ts`
+- **Google OAuth**: `src/lib/oauth.ts`（扩展走 `chrome.identity`，需 `identity` 权限）
 
 ### 样式相关
 

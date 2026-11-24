@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
+import { signInWithOAuth, OAuthCancelledError, type OAuthProvider } from '../lib/oauth';
 import { useAppStore } from '../stores/useAppStore';
 import type { User, Session } from '@supabase/supabase-js';
 
@@ -33,15 +34,14 @@ export function useCloudSync() {
   }, []);
 
   // 登录
-  const signIn = async (provider: 'github' | 'google') => {
+  const signIn = async (provider: OAuthProvider) => {
     setError(null);
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: {
-        redirectTo: window.location.origin,
-      },
-    });
-    if (error) setError(error.message);
+    try {
+      await signInWithOAuth(provider);
+    } catch (err) {
+      if (err instanceof OAuthCancelledError) return;
+      setError(err instanceof Error ? err.message : '登录失败');
+    }
   };
 
   // 邮箱登录

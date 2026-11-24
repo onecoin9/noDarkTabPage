@@ -9,7 +9,8 @@
     },
     "permissions": [
         "storage",
-        "bookmarks"
+        "bookmarks",
+        "identity"
     ],
     "content_security_policy": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; img-src 'self' data: https: http: blob:; style-src 'self' 'unsafe-inline'; connect-src 'self' https: http:",
     "icons": {

@@ -1,0 +1,56 @@
+name: Supabase Keepalive
+
+# Supabase 免费套餐项目在 7 天数据库活动不足时会被自动暂停，
+# 暂停后项目域名停止解析（NXDOMAIN），登录/云同步/壁纸代理全部失效。
+# 这里每天发一次极轻量的 REST 查询，保持项目「活跃」。
+#
+# 保活强度可调：每天 03:17 UTC（= 北京时间 11:17）。
+# 想改成每周一次，把 cron 换成 '17 3 * * 1'。
+# 注意：仓库连续 60 天无提交时 GitHub 会自动禁用定时工作流，需要手动 Enable。
+#
+# 可选：在仓库 Settings → Secrets 中配置 SUPABASE_URL / SUPABASE_KEY 覆盖默认值
+# （默认值就是前端公开使用的 URL 与 publishable key，不是机密）。
+
+on:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Ping Supabase
+        env:
+          SUPABASE_URL_SECRET: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY_SECRET: ${{ secrets.SUPABASE_KEY }}
+        run: |
+          URL="${SUPABASE_URL_SECRET:-https://gbfdfpxlltnvnrsayrou.supabase.co}"
+          KEY="${SUPABASE_KEY_SECRET:-sb_publishable_7Bxn8fxjWr9AOCUVfflw0w_J9F2m-Zx}"
+
+          echo "Auth health check:"
+          health_code=$(curl -sS -o /dev/null -w '%{http_code}' --retry 2 --retry-delay 5 \
+            --max-time 20 "$URL/auth/v1/health")
+          echo "  HTTP $health_code"
+
+          # 查询 user_settings 会真正落到 Postgres，才算数据库活动。
+          # RLS 下匿名请求返回 200 + []，无副作用。
+          echo "Database activity:"
+          body=$(curl -sS --retry 2 --retry-delay 5 --max-time 20 \
+            -H "apikey: $KEY" \
+            -H "Authorization: Bearer $KEY" \
+            -w '\n%{http_code}' \
+            "$URL/rest/v1/user_settings?select=id&limit=1")
+          db_code=$(echo "$body" | tail -n1)
+          echo "  HTTP $db_code"
+
+          if [ "$health_code" != "200" ] || [ "$db_code" != "200" ]; then
+            echo "::error::Supabase 不可用（auth=$health_code db=$db_code）。项目可能已暂停，请到 Dashboard 点击 Resume project。"
+            exit 1
+          fi
+
+          echo "::notice::保活成功，项目保持活跃。"

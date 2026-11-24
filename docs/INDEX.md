@@ -58,7 +58,7 @@ docs/
 - **和风天气 API** → [api/WEATHER_API.md](api/WEATHER_API.md)
 - **Supabase 云同步** → [api/CLOUD_SYNC.md](api/CLOUD_SYNC.md)
 - **Wallhaven 壁纸** → 已配置在 `src/lib/wallhaven.ts`
-- **Google OAuth** → 已配置在 `src/lib/supabase.ts`
+- **Google OAuth** → 已配置在 `src/lib/oauth.ts`（客户端在 `src/lib/supabase.ts`）
 
 ### 我想开发...
 
